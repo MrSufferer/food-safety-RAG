@@ -229,12 +229,38 @@ test('configures a free OpenRouter model as fallback and identifies it when used
   });
 });
 
+test('does not configure or announce a fallback when the free model is primary', async () => {
+  let requestBody;
+  const freeModel = 'google/gemma-4-31b-it:free';
+  await withServer({
+    env: { OPENROUTER_API_KEY: 'test-key', OPENROUTER_MODEL: freeModel },
+    fetchImpl: async (_url, options) => {
+      requestBody = JSON.parse(options.body);
+      return fakeProviderResponse(validOutput(), { model: freeModel });
+    },
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(requestBody.model, freeModel);
+    assert.equal(requestBody.models, undefined);
+    assert.equal(body.model, freeModel);
+    assert.equal(body.generationNotice, undefined);
+  });
+});
+
 test('returns a cited local checklist when the primary and free fallback are rate-limited', async () => {
   let requestBody;
+  let providerRequests = 0;
   const facts = { ...householdCafe, smallExemptionClaim: 'yes' };
   await withServer({
     env: { OPENROUTER_API_KEY: 'test-key' },
     fetchImpl: async (_url, options) => {
+      providerRequests += 1;
       requestBody = JSON.parse(options.body);
       return { ok: false, status: 429 };
     },
@@ -257,6 +283,7 @@ test('returns a cited local checklist when the primary and free fallback are rat
     assert.equal(body.error, undefined);
   });
   assert.deepEqual(requestBody.models, ['google/gemma-4-31b-it:free']);
+  assert.equal(providerRequests, 1);
 });
 
 test('does not call the provider before facts have been reviewed', async () => {

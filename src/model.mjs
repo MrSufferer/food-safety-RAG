@@ -29,7 +29,7 @@ export class ProviderError extends Error {
 export async function generateChecklist({ facts, evidence, env = process.env, fetchImpl = fetch }) {
   const apiKey = env.OPENROUTER_API_KEY?.trim();
   const model = env.OPENROUTER_MODEL?.trim() || 'nvidia/nemotron-3-super-120b-a12b:free';
-  const fallbackModel = FREE_MODEL_FALLBACK;
+  const hasFreeFallback = model !== FREE_MODEL_FALLBACK;
   if (!apiKey) throw new ProviderError('Thiếu OPENROUTER_API_KEY. Hãy cấu hình khóa trong môi trường chạy để tạo checklist.', evidence);
 
   let response;
@@ -44,7 +44,7 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
       },
       body: JSON.stringify({
         model,
-        ...(fallbackModel !== model ? { models: [fallbackModel] } : {}),
+        ...(hasFreeFallback ? { models: [FREE_MODEL_FALLBACK] } : {}),
         temperature: 0.1,
         messages: [
           { role: 'system', content: `${SYSTEM_PROMPT}\n\n${CITATION_GUIDANCE}` },
@@ -107,7 +107,7 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
     checklist,
     evidenceGaps,
     model: servedModel,
-    ...(fallbackModel !== model && servedModel === fallbackModel ? { generationNotice: FREE_MODEL_FALLBACK_NOTICE } : {}),
+    ...(hasFreeFallback && servedModel === FREE_MODEL_FALLBACK ? { generationNotice: FREE_MODEL_FALLBACK_NOTICE } : {}),
     snapshotDate,
   };
 }
