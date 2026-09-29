@@ -7,6 +7,10 @@ function normalizeClaimText(text) {
     .toLocaleLowerCase('vi');
 }
 
+function isProviderMetaCommentary(text) {
+  return /\b(?:prot(?:otype|otyp|ype)|openrouter|gemini|language model|ai model)\b|(?:not suitable for your case|không phù hợp với (?:trường hợp|tình huống) của bạn)/i.test(text);
+}
+
 function claimMatchesTag(text, tag) {
   const has = (pattern) => pattern.test(text);
   const hasTool = has(/dung cu|do chua|vat lieu/);
@@ -55,6 +59,7 @@ function validClaim(claim, evidence, supportedTags) {
   const byId = new Map(evidence.map((passage) => [passage.id, passage]));
 
   if (!text || text.length > 900 || passageIds.length === 0 || passageIds.length > 4) return null;
+  if (isProviderMetaCommentary(text)) return null;
   if (passageIds.some((id) => typeof id !== 'string' || !byId.has(id))) return null;
   const normalizedText = normalizeClaimText(text);
   if (passageIds.some((id) => !byId.get(id).claimTags?.some((tag) => (

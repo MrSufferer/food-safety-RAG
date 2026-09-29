@@ -47,6 +47,19 @@ function fakeProviderResponse(output, { model = 'test-model' } = {}) {
   };
 }
 
+function fakeGeminiResponse(output, { modelVersion = 'gemini-test' } = {}) {
+  return {
+    ok: true,
+    status: 200,
+    async json() {
+      return {
+        modelVersion,
+        candidates: [{ content: { parts: [{ text: JSON.stringify(output) }] } }],
+      };
+    },
+  };
+}
+
 function validOutput() {
   return {
     route: {
@@ -67,6 +80,14 @@ function validOutput() {
     },
   };
 }
+
+test('reports Gemini-only configuration as a ready provider', async () => {
+  await withServer({ env: { GEMINI_API_KEY: 'gemini-test-key' } }, async (origin) => {
+    const response = await fetch(`${origin}/api/health`);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true, providerConfigured: true });
+  });
+});
 
 async function withServer(options, run) {
   const server = createServer(options);
@@ -110,6 +131,93 @@ test('user facts pass through review, evidence selection, model generation, and 
     assert.equal(requestBody.response_format.type, 'json_object');
     assert.ok(JSON.parse(requestBody.messages[1].content).passages.length <= 6);
     assert.match(requestBody.messages[0].content, /unresolved về hồ sơ, lệ phí và thời hạn dùng dn-procedure-1-013855-h17/);
+  });
+});
+
+test('uses Gemini Flash-Lite with structured Vietnamese checklist output when configured', async () => {
+  let requestBody;
+  await withServer({
+    env: { GEMINI_API_KEY: 'gemini-test-key' },
+    fetchImpl: async (url, options) => {
+      assert.equal(url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent');
+      assert.equal(options.headers['x-goog-api-key'], 'gemini-test-key');
+      requestBody = JSON.parse(options.body);
+      return fakeGeminiResponse(validOutput());
+    },
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.model, 'gemini-test');
+    assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
+    assert.deepEqual(requestBody.generationConfig.responseFormat, { text: { mimeType: 'application/json' } });
+    assert.match(requestBody.systemInstruction.parts[0].text, /người lần đầu mở quán/i);
+    assert.match(requestBody.systemInstruction.parts[0].text, /không viết nhận xét.*nguyên mẫu/i);
+    const input = JSON.parse(requestBody.contents[0].parts[0].text);
+    assert.deepEqual(input.facts, householdCafe);
+    assert.ok(input.passages.length > 0);
+  });
+});
+
+test('tries the free Gemini model and then OpenRouter when the preferred Gemini model fails', async () => {
+  const requested = [];
+  await withServer({
+    env: {
+      GEMINI_API_KEY: 'gemini-test-key',
+      GEMINI_MODEL: 'gemini-paid-test',
+      GEMINI_FREE_MODEL: 'gemini-free-test',
+      OPENROUTER_API_KEY: 'openrouter-test-key',
+      OPENROUTER_MODEL: 'openrouter-test-model',
+    },
+    fetchImpl: async (url, options) => {
+      requested.push(url);
+      if (url.includes('/models/gemini-paid-test:')) return { ok: false, status: 429 };
+      if (url.includes('/models/gemini-free-test:')) return { ok: false, status: 503 };
+      assert.equal(url, 'https://openrouter.ai/api/v1/chat/completions');
+      assert.equal(options.headers.Authorization, 'Bearer openrouter-test-key');
+      return fakeProviderResponse(validOutput(), { model: 'openrouter-test-model' });
+    },
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.model, 'openrouter-test-model');
+    assert.match(body.generationNotice, /Gemini.*OpenRouter/i);
+    assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
+  });
+  assert.equal(requested.length, 3);
+  assert.match(requested[0], /gemini-paid-test/);
+  assert.match(requested[1], /gemini-free-test/);
+  assert.equal(requested[2], 'https://openrouter.ai/api/v1/chat/completions');
+});
+
+test('drops Gemini prototype meta-commentary while retaining independently supported RAG claims', async () => {
+  const output = validOutput();
+  output.route.text = 'The checklist was created by this protype. Với giấy đăng ký hộ kinh doanh, UBND cấp xã là nơi hỏi về thủ tục cấp Giấy chứng nhận.';
+  output.tasks[0].text = 'This is not suitable for your case. Rà soát cách quán tách riêng dụng cụ và đồ chứa đựng cho thực phẩm sống, chín.';
+  await withServer({
+    env: { GEMINI_API_KEY: 'gemini-test-key' },
+    fetchImpl: async () => fakeGeminiResponse(output),
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+    const visible = JSON.stringify(body.checklist);
+
+    assert.equal(response.status, 200);
+    assert.doesNotMatch(visible, /protype|not suitable for your case/i);
+    assert.ok(body.checklist.tasks.length > 0);
+    assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
   });
 });
 

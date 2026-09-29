@@ -83,7 +83,10 @@ export function createServer({ env = process.env, fetchImpl = fetch, corpus = pa
   return createHttpServer(async (request, response) => {
     const requestUrl = new URL(request.url ?? '/', 'http://localhost');
     if (requestUrl.pathname === '/api/health' && request.method === 'GET') {
-      return sendJson(response, 200, { ok: true, providerConfigured: Boolean(env.OPENROUTER_API_KEY?.trim()) });
+      return sendJson(response, 200, {
+        ok: true,
+        providerConfigured: Boolean(env.GEMINI_API_KEY?.trim() || env.OPENROUTER_API_KEY?.trim()),
+      });
     }
 
     if (requestUrl.pathname === '/api/checklist' && request.method === 'POST') {
