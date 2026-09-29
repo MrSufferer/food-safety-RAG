@@ -10,6 +10,8 @@ A small Vietnamese preparation checklist demo for a café or takeaway in Đà N�
 
 The app tries Gemini 3.1 Flash-Lite first, then the free-tier Gemini 3.5 Flash-Lite fallback, and then OpenRouter. Google lists Gemini 3.1 Flash-Lite as a cost-efficient model with free-tier access; check current [model availability](https://ai.google.dev/gemini-api/docs/models) and [pricing](https://ai.google.dev/gemini-api/docs/pricing) for the project tied to your key. Set `GEMINI_MODEL` or `GEMINI_FREE_MODEL` to choose different Gemini models. The OpenRouter default is `nvidia/nemotron-3-super-120b-a12b:free`; set `OPENROUTER_MODEL` to change it. If every provider fails, the app shows a clear error and the retrieved passages. Provider keys stay in the server environment and are not sent to the browser. No package installation is required.
 
+For the hosted app, configure `GEMINI_API_KEY` (and optional model overrides) on the Render service that runs `server.mjs`. Vercel only hosts the page and forwards `/api` requests to that Render service, so a key added to Vercel does not reach the model server.
+
 ## Scope and source behavior
 
 - The supported route is limited to a Đà Nẵng café or takeaway with a household-business registration or an unknown registration type. If registration is unknown, the office route is withheld while independently supported preparation steps remain available. Other registration types are shown as out of scope and are not sent to the model.

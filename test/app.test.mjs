@@ -202,8 +202,8 @@ test('tries the free Gemini model and then OpenRouter when the preferred Gemini 
 
 test('drops Gemini prototype meta-commentary while retaining independently supported RAG claims', async () => {
   const output = validOutput();
-  output.route.text = 'The checklist was created by this protype. Với giấy đăng ký hộ kinh doanh, UBND cấp xã là nơi hỏi về thủ tục cấp Giấy chứng nhận.';
-  output.tasks[0].text = 'This is not suitable for your case. Rà soát cách quán tách riêng dụng cụ và đồ chứa đựng cho thực phẩm sống, chín.';
+  output.route.text = 'The checklist was created by this protype, not suitable for your case';
+  output.tasks[0].text = 'Rà soát cách quán tách riêng dụng cụ và đồ chứa đựng cho thực phẩm sống, chín.';
   await withServer({
     env: { GEMINI_API_KEY: 'gemini-test-key' },
     fetchImpl: async () => fakeGeminiResponse(output),
