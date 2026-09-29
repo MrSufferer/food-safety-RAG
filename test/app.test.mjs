@@ -164,6 +164,38 @@ test('uses Gemini Flash-Lite with structured Vietnamese checklist output when co
   });
 });
 
+test('uses the free Gemini model when the preferred model is rate-limited', async () => {
+  const requestedModels = [];
+  await withServer({
+    env: { GEMINI_API_KEY: 'gemini-test-key' },
+    fetchImpl: async (url, options) => {
+      requestedModels.push(url);
+      if (url.includes('/models/gemini-3.1-flash-lite:')) return { ok: false, status: 429 };
+
+      assert.equal(url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent');
+      assert.equal(JSON.parse(options.body).generationConfig.responseMimeType, 'application/json');
+      return fakeGeminiResponse(validOutput(), { modelVersion: 'gemini-3.5-flash-lite' });
+    },
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.model, 'gemini-3.5-flash-lite');
+    assert.match(body.generationNotice, /Gemini.*dự phòng miễn phí/i);
+    assert.ok(body.checklist.tasks.length > 0);
+    assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
+  });
+
+  assert.deepEqual(requestedModels, [
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent',
+  ]);
+});
+
 test('tries the free Gemini model and then OpenRouter when the preferred Gemini model fails', async () => {
   const requested = [];
   await withServer({
