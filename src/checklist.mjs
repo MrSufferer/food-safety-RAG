@@ -101,7 +101,7 @@ export function applyOwnerFactGuidance(checklist, facts, evidence) {
   if (facts.legalForm === 'unknown') {
     guided.route = null;
     const missingRegistration = fixedClaim(
-      'Chưa rõ tên trên giấy đăng ký của quán. Cần biết quán đang giữ Giấy chứng nhận đăng ký hộ kinh doanh, Giấy chứng nhận đăng ký doanh nghiệp, hay giấy đăng ký hợp tác xã để xác định đúng nhóm cơ quan theo hướng dẫn của Đà Nẵng.',
+      'Chưa thể nêu cơ quan tiếp nhận vì chưa rõ tên loại giấy đăng ký. Hãy kiểm tra quán đang hoạt động theo Giấy chứng nhận đăng ký hộ kinh doanh, Giấy chứng nhận đăng ký doanh nghiệp, Giấy chứng nhận đầu tư, Giấy chứng nhận đăng ký hợp tác xã hay Giấy chứng nhận đăng ký liên hợp tác xã; hướng dẫn của Đà Nẵng phân nhóm cơ quan theo thông tin này.',
       [faqId], evidence, ['household-business-authority', 'conditional-route'],
     );
     guided.unresolved = [missingRegistration, ...guided.unresolved].filter(Boolean).slice(0, 5);

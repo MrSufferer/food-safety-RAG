@@ -107,8 +107,12 @@ test('unknown registration withholds the office and keeps cited preparation task
     assert.ok(body.checklist.exceptionAssessment);
     assert.ok(body.checklist.tasks.length > 0);
     assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
-    assert.match(body.checklist.unresolved.map((claim) => claim.text).join(' '), /giấy đăng ký/);
-    assert.ok(body.checklist.unresolved.some((claim) => claim.passageIds.includes('dn-faq-24680-household-certificate-authority')));
+    const unresolvedText = body.checklist.unresolved.map((claim) => claim.text).join(' ');
+    assert.match(unresolvedText, /chưa thể nêu cơ quan tiếp nhận/i);
+    const registrationGuidance = body.checklist.unresolved.find((claim) => /chưa thể nêu cơ quan tiếp nhận/i.test(claim.text));
+    assert.match(registrationGuidance.text, /Giấy chứng nhận đầu tư/);
+    assert.match(registrationGuidance.text, /liên hợp tác xã/);
+    assert.ok(registrationGuidance.citations.some((citation) => citation.id === 'dn-faq-24680-household-certificate-authority'));
     assert.ok(body.checklist.nextAction.passageIds.includes('dn-faq-24680-household-certificate-authority'));
     assert.deepEqual(JSON.parse(requestFacts).facts, facts);
     assert.ok(body.evidence.some((passage) => passage.id === 'vn-law-55-2010-article-29-separate-utensils'));

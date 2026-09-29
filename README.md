@@ -21,4 +21,4 @@ The default model is `nvidia/nemotron-3-super-120b-a12b:free`. Set `OPENROUTER_M
 
 ## Local checks
 
-Run `npm test` to exercise scenario filtering, reviewed-facts flow, source selection, citation validation, provider failure handling, and the local page route. The real newcomer observation is still pending; see [`evaluation/README.md`](evaluation/README.md).
+Run `npm run typecheck` to syntax-check the JavaScript files with Node, then `npm test` to exercise scenario filtering, reviewed-facts flow, source selection, citation validation, provider failure handling, and the local page route. The real newcomer observation is still pending; see [`evaluation/README.md`](evaluation/README.md).
