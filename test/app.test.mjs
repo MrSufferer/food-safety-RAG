@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createServer } from '../server.mjs';
 import { passages } from '../src/passages.mjs';
-import { renderProviderFailure } from '../public/evidence-view.js';
+import { renderEvidence, renderProviderFailure } from '../public/evidence-view.js';
 
 const issue16Review = JSON.parse(await readFile(new URL('../evaluation/issue-16-scenario-review.json', import.meta.url), 'utf8'));
 
@@ -233,7 +233,7 @@ test('provider failure displays selected source passages and no generated checkl
   });
 });
 
-test('provider failure renders the error and selected evidence expanded by default', () => {
+test('provider failure expands selected evidence while ordinary evidence stays collapsed', () => {
   const parent = new TestElement('main');
   const evidence = [{
     document: 'Luật An toàn thực phẩm',
@@ -262,6 +262,11 @@ test('provider failure renders the error and selected evidence expanded by defau
   const [passage] = evidenceDisclosure.children.slice(1);
   assert.equal(passage.open, true);
   assert.equal(passage.children[1].children[0].textContent, evidence[0].excerpt);
+
+  const ordinaryParent = new TestElement('main');
+  renderEvidence(evidence, { document: testDocument(), parent: ordinaryParent });
+  assert.equal(ordinaryParent.children[0].open, false);
+  assert.equal(ordinaryParent.children[0].children[1].open, false);
 });
 
 test('withholds a claim if its generated citation is topically unrelated to the claim', async () => {

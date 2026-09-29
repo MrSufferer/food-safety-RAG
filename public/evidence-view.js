@@ -20,40 +20,42 @@ function node(document, tag, className, text) {
   return element;
 }
 
+function externalLink(document, label, url) {
+  const link = node(document, 'a', '', label);
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  return link;
+}
+
+function renderPassage(document, passage, expanded) {
+  const entry = node(document, 'details', 'source-entry');
+  entry.open = expanded;
+  entry.append(node(document, 'summary', '', `${passage.document} · ${passage.section}`));
+  const body = node(document, 'div', 'source-body');
+  body.append(node(document, 'blockquote', '', passage.excerpt));
+  const meta = node(document, 'div', 'source-meta');
+  meta.append(node(document, 'p', '', `Mã đoạn: ${passage.id}`));
+  const tags = (passage.claimTags || []).map((tag) => claimTagLabels[tag] || tag);
+  if (tags.length) meta.append(node(document, 'p', '', `Thẻ nội dung: ${tags.join(' · ')}`));
+  meta.append(node(document, 'p', '', `Phiên bản: ${passage.version}`));
+  meta.append(node(document, 'p', '', `Ban hành: ${passage.issuedDate || 'chưa rõ'} · Hiệu lực: ${passage.effectiveDate || 'chưa ghi nhận'} · Rà soát: ${passage.reviewDate || 'chưa rõ'}`));
+  if (passage.useLimits) meta.append(node(document, 'p', '', `Giới hạn sử dụng: ${passage.useLimits}`));
+  meta.append(externalLink(document, 'Mở trang nguồn ↗', passage.url));
+  if (passage.documentUrl && passage.documentUrl !== passage.url) {
+    meta.append(externalLink(document, 'Mở văn bản đính kèm ↗', passage.documentUrl));
+  }
+  body.append(meta);
+  entry.append(body);
+  return entry;
+}
+
 export function renderEvidence(evidence = [], { document, parent, expanded = false }) {
   if (!Array.isArray(evidence) || evidence.length === 0) return;
   const details = node(document, 'details', 'source-box');
   details.open = expanded;
   details.append(node(document, 'summary', '', `Mở các đoạn nguồn đã chọn (${evidence.length})`));
-  for (const passage of evidence) {
-    const entry = node(document, 'details', 'source-entry');
-    entry.open = expanded;
-    entry.append(node(document, 'summary', '', `${passage.document} · ${passage.section}`));
-    const body = node(document, 'div', 'source-body');
-    body.append(node(document, 'blockquote', '', passage.excerpt));
-    const meta = node(document, 'div', 'source-meta');
-    meta.append(node(document, 'p', '', `Mã đoạn: ${passage.id}`));
-    const tags = (passage.claimTags || []).map((tag) => claimTagLabels[tag] || tag);
-    if (tags.length) meta.append(node(document, 'p', '', `Thẻ nội dung: ${tags.join(' · ')}`));
-    meta.append(node(document, 'p', '', `Phiên bản: ${passage.version}`));
-    meta.append(node(document, 'p', '', `Ban hành: ${passage.issuedDate || 'chưa rõ'} · Hiệu lực: ${passage.effectiveDate || 'chưa ghi nhận'} · Rà soát: ${passage.reviewDate || 'chưa rõ'}`));
-    if (passage.useLimits) meta.append(node(document, 'p', '', `Giới hạn sử dụng: ${passage.useLimits}`));
-    const source = node(document, 'a', '', 'Mở trang nguồn ↗');
-    source.href = passage.url;
-    source.target = '_blank';
-    source.rel = 'noopener noreferrer';
-    meta.append(source);
-    if (passage.documentUrl && passage.documentUrl !== passage.url) {
-      const documentLink = node(document, 'a', '', 'Mở văn bản đính kèm ↗');
-      documentLink.href = passage.documentUrl;
-      documentLink.target = '_blank';
-      documentLink.rel = 'noopener noreferrer';
-      meta.append(documentLink);
-    }
-    body.append(meta);
-    entry.append(body);
-    details.append(entry);
-  }
+  for (const passage of evidence) details.append(renderPassage(document, passage, expanded));
   parent.append(details);
 }
 
