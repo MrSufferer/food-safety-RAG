@@ -32,6 +32,10 @@ These are automated checks only. They are not an uncoached owner observation.
 - Model-generated checklist acceptance: still unverified in production because the configured upstream returned 429 and the reviewed alternatives failed content review.
 - Human observation: not performed; waived as an acceptance criterion. No participant-usefulness claim is made.
 
+## Issue 22 Gemini live API verification
+
+Automated live checks on 2026-09-29 used the local ignored `.env` file. The Gemini 3.1 Flash-Lite path succeeded three consecutive times, and Gemini 3.5 Flash-Lite succeeded once when selected directly. All four runs returned three cited preparation tasks; the checked checklist contained no prototype or suitability meta-commentary. In a 3.1 run, the conditional authority route, utensil tasks, unresolved procedure details, and next action were checked against their cited official passages and were supported. No exception assessment was emitted for this scenario, which had no small-shop exemption claim. Prompts and generated text were not saved. These successful responses confirm that the key can call both models with available quota; they do not reveal whether the Google project has paid billing enabled or whether any request used paid quota. Both configured models are listed with free-tier access in Google's current [pricing](https://ai.google.dev/gemini-api/docs/pricing) and [model availability](https://ai.google.dev/gemini-api/docs/models) docs. Gemini 3.1 remains the lower standard paid rate ($0.25/$1.50 per million input/output tokens) and Gemini 3.5 Flash-Lite the fallback ($0.30/$2.50); Google lists a May 7, 2027 shutdown date for 3.1 and recommends 3.5 Flash-Lite as its replacement.
+
 ## Issue 15 scenario review
 
 Two saved automated scenarios cover unknown registration with a claimed small-scale exception and a takeaway exemption claim. Inputs, normalized outputs, passage IDs, model identity, review dates, and reviewer notes are in [`issue-15-scenario-review.json`](issue-15-scenario-review.json).
