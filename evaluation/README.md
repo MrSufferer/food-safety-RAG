@@ -34,6 +34,12 @@ This verifies the configured model and citation path only. It is not the require
 - Outcome: HTTP 200; claims passed citation validation
 - Human observation: pending
 
+## Issue 15 scenario review
+
+Two saved automated scenarios cover unknown registration with a claimed small-scale exception and a takeaway exemption claim. Inputs, normalized outputs, passage IDs, model identity, review dates, and reviewer notes are in [`issue-15-scenario-review.json`](issue-15-scenario-review.json).
+
+These records use the local `test-model` provider fixture and the app's citation validation and deterministic fact guidance; they are not live model runs. Both scenarios passed the automated citation and content assertions in `test/app.test.mjs`. The live provider key is not configured in this workspace, so a live model replay remains pending. The recorded reviewer notes check that each legal and procedure claim is cited and qualified by the official passage limits.
+
 ## Session record
 
 - Date and evaluator:

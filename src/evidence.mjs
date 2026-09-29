@@ -3,6 +3,8 @@ import { snapshotDate } from './passages.mjs';
 const businessTypes = new Set(['cafe', 'takeaway', 'both']);
 const legalForms = new Set(['household_business', 'enterprise', 'cooperative', 'unknown']);
 const preparations = new Set(['food_and_drink', 'drinks_only']);
+const operationModes = new Set(['prepared_at_fixed_shop', 'packaged_only', 'street_food', 'mixed_or_unknown']);
+const exemptionClaims = new Set(['yes', 'no', 'unsure']);
 
 export function validateFacts(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
@@ -13,6 +15,8 @@ export function validateFacts(input) {
     businessType: String(input.businessType ?? ''),
     legalForm: String(input.legalForm ?? ''),
     preparation: String(input.preparation ?? ''),
+    operationMode: String(input.operationMode ?? ''),
+    smallExemptionClaim: String(input.smallExemptionClaim ?? ''),
     location: String(input.location ?? ''),
   };
 
@@ -24,6 +28,12 @@ export function validateFacts(input) {
   }
   if (!preparations.has(facts.preparation)) {
     throw new TypeError('Chọn cách quán chuẩn bị đồ ăn, thức uống.');
+  }
+  if (!operationModes.has(facts.operationMode)) {
+    throw new TypeError('Mô tả cách quán bán hoặc chuẩn bị thực phẩm.');
+  }
+  if (!exemptionClaims.has(facts.smallExemptionClaim)) {
+    throw new TypeError('Cho biết bạn có nghĩ quán được miễn giấy chứng nhận hay chưa.');
   }
   if (facts.location !== 'Da Nang') {
     throw new TypeError('Bản thử này chỉ dùng cho quán ở Đà Nẵng.');
@@ -40,7 +50,7 @@ export function selectEvidence(facts, corpus) {
       || (validFacts.businessType === 'both' && (passage.operationTags.includes('cafe') || passage.operationTags.includes('takeaway')));
     if (!matchesBusiness) return false;
     if (!passage.operationTags.includes(operation) && !passage.operationTags.includes('food-and-drink')) return false;
-    if (passage.id === 'dn-faq-24680-household-certificate-authority' && validFacts.legalForm !== 'household_business') return false;
+    if (passage.id === 'dn-faq-24680-household-certificate-authority' && !['household_business', 'unknown'].includes(validFacts.legalForm)) return false;
     if (passage.id === 'vn-law-55-2010-article-29-separate-utensils' && operation !== 'food_and_drink') return false;
     return true;
   });
@@ -49,5 +59,5 @@ export function selectEvidence(facts, corpus) {
 }
 
 export function isSupportedScenario(facts) {
-  return validateFacts(facts).legalForm === 'household_business';
+  return ['household_business', 'unknown'].includes(validateFacts(facts).legalForm);
 }

@@ -1,6 +1,6 @@
 # Rà soát an toàn thực phẩm cho quán ở Đà Nẵng
 
-A small Vietnamese preparation checklist demo for a café or takeaway registered as a household business in Đà Nẵng. It asks about the registration and the shop's food preparation, lets the owner review those facts, then returns source-linked preparation steps and a conditional authority route.
+A small Vietnamese preparation checklist demo for a café or takeaway in Đà Nẵng. It asks about the registration, actual food activity, and a possible certificate exception, lets the owner review those facts, then returns source-linked preparation steps and a conditional authority route.
 
 ## Run it
 
@@ -12,7 +12,8 @@ The default model is `nvidia/nemotron-3-super-120b-a12b:free`. Set `OPENROUTER_M
 
 ## Scope and source behavior
 
-- The supported route is limited to a Đà Nẵng café or takeaway with a household-business registration. Other registration types are shown as out of scope and are not sent to the model.
+- The supported route is limited to a Đà Nẵng café or takeaway with a household-business registration or an unknown registration type. If registration is unknown, the office route is withheld while independently supported preparation steps remain available. Other registration types are shown as out of scope and are not sent to the model.
+- A small-business claim is checked against the reported registration and actual food activity. Shop size alone does not establish a certificate exception, and food-safety conditions still apply to exempt establishments.
 - Only the owner's answers and matching source passages are sent to OpenRouter. The bundled source snapshot is dated 2026-09-29.
 - Generated claims must reference IDs from the selected passages. Claims without valid citations are removed; an incomplete route or next step withholds the checklist and shows the sources instead.
 - A tick means the owner has read or prepared an item. It does not certify compliance or readiness to file.

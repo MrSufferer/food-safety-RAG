@@ -1,13 +1,15 @@
-import { assertUsefulChecklist, sanitizeChecklist } from './checklist.mjs';
+import { applyOwnerFactGuidance, assertUsefulChecklist, sanitizeChecklist } from './checklist.mjs';
 import { snapshotDate } from './passages.mjs';
 
 const SYSTEM_PROMPT = `Bạn là công cụ chuẩn bị thông tin cho chủ quán cà phê/takeaway mới ở Đà Nẵng. Trả lời hoàn toàn bằng tiếng Việt, ngắn và cụ thể. Chỉ trả một đối tượng JSON có đúng các khóa route, tasks, unresolved, nextAction. Mỗi mục là null hoặc đối tượng có text và passageIds; riêng tasks và unresolved là mảng. Đây không phải tư vấn pháp lý, quyết định đủ điều kiện, hồ sơ nộp, hay xác nhận sẵn sàng hoạt động.
 
-Chỉ dùng các dữ kiện chủ quán cung cấp và các đoạn nguồn trong yêu cầu. Không suy ra miễn giấy từ chữ “nhỏ”; nêu Điều 11–12 Nghị định 15/2018 nếu cần nhưng không kết luận ngoại lệ nếu đoạn nguồn không đủ phân loại. Không tự thêm thành phần hồ sơ, lệ phí, thời hạn hoặc biểu mẫu hiện hành. Nêu rõ chúng chưa xác minh và đặt câu hỏi cần hỏi UBND cấp xã. Không dùng mã 1.013855.H17 như bằng chứng cho hồ sơ hoặc mức phí hiện hành.
+Chỉ dùng các dữ kiện chủ quán cung cấp và các đoạn nguồn trong yêu cầu. Khi loại giấy đăng ký là unknown, đặt route=null; không nêu cơ quan. Trong unresolved, nêu rõ cần kiểm tra tên giấy đăng ký nào và vì sao dữ kiện đó ảnh hưởng đến đầu mối. Vẫn tạo các nhiệm vụ an toàn thực phẩm có căn cứ độc lập với tuyến đăng ký.
 
-Mọi câu nói về thẩm quyền, điều kiện, hoặc việc chuẩn bị dựa trên nguồn đều phải kèm passageIds chính xác từ các đoạn nguồn gửi vào. Chọn đoạn có thẻ nội dung đúng với từng loại nhận định; không dùng đoạn về dụng cụ để dẫn cho thẩm quyền. Nếu nguồn không hỗ trợ, bỏ câu đó. Tạo 1–4 việc rà soát/chuẩn bị hữu ích, không tuyên bố chủ quán đã tuân thủ. Tạo route có điều kiện dựa trên giấy đăng ký hộ kinh doanh được người dùng xác nhận. Trong unresolved, ghi rõ thành phần hồ sơ, lệ phí và thời hạn hiện hành là “chưa xác minh”. Bước tiếp theo phải là việc hỏi/xác nhận chính thức, không khẳng định được nộp hồ sơ. Nhắc rõ các dấu tick chỉ ghi nhận đã đọc hoặc đã chuẩn bị, không xác nhận tuân thủ hay sẵn sàng nộp.`;
+Không suy ra miễn giấy từ chữ “nhỏ”. Đối chiếu đúng giấy đăng ký và hoạt động thực tế với định nghĩa tại khoản 10 Điều 3 và các nhóm tại Điều 12 Nghị định 15/2018/NĐ-CP; nếu chưa đủ dữ kiện, nói rõ điều gì còn thiếu và yêu cầu xác nhận chính thức. Ngoại lệ Giấy chứng nhận không xóa các điều kiện an toàn thực phẩm áp dụng cho hoạt động. Không tự thêm thành phần hồ sơ, lệ phí, thời hạn hoặc biểu mẫu hiện hành. Nêu rõ chúng chưa xác minh. Không dùng mã 1.013855.H17 như bằng chứng cho hồ sơ hoặc mức phí hiện hành.
 
-const CITATION_GUIDANCE = `Ánh xạ nguồn cho tình huống hộ kinh doanh quán cà phê: route dùng dn-faq-24680-household-certificate-authority; tasks chỉ dùng các passage về dụng cụ trong Luật 55; unresolved về hồ sơ, lệ phí và thời hạn chỉ dùng dn-procedure-1-013855-h17, không kèm FAQ vì FAQ chỉ nói về thẩm quyền; nextAction có thể dùng FAQ và danh mục thủ tục. Không tự ghép nguồn không hỗ trợ vào cùng một claim.`;
+Mọi câu nói về thẩm quyền, điều kiện, hoặc việc chuẩn bị dựa trên nguồn đều phải kèm passageIds chính xác từ các đoạn nguồn gửi vào. Chọn đoạn có thẻ nội dung đúng với từng loại nhận định; không dùng đoạn về dụng cụ để dẫn cho thẩm quyền. Nếu nguồn không hỗ trợ, bỏ câu đó. Tạo 1–4 việc rà soát/chuẩn bị hữu ích, không tuyên bố chủ quán đã tuân thủ. Route chỉ được nêu có điều kiện khi giấy đăng ký hộ kinh doanh được người dùng xác nhận. Trong unresolved, ghi rõ thành phần hồ sơ, lệ phí và thời hạn hiện hành là “chưa xác minh”. Bước tiếp theo phải là việc hỏi/xác nhận chính thức, không khẳng định được nộp hồ sơ. Nhắc rõ các dấu tick chỉ ghi nhận đã đọc hoặc đã chuẩn bị, không xác nhận tuân thủ hay sẵn sàng nộp.`;
+
+const CITATION_GUIDANCE = `Ánh xạ nguồn: route dùng dn-faq-24680-household-certificate-authority và chỉ khi đã xác nhận giấy đăng ký hộ kinh doanh; tasks dùng các passage về dụng cụ trong Luật 55 phù hợp với hoạt động; unresolved về hồ sơ, lệ phí và thời hạn dùng dn-procedure-1-013855-h17, không kèm FAQ vì FAQ chỉ nói về thẩm quyền. Để đánh giá ngoại lệ, dùng vn-decree-15-2018-articles-11-12; nêu đúng dữ kiện đăng ký và hoạt động do chủ quán cung cấp. Với legalForm=unknown, route phải null, unresolved phải xác định giấy đăng ký còn thiếu, còn tasks vẫn phải có căn cứ. Không tự ghép nguồn không hỗ trợ vào cùng một claim.`;
 
 export class ProviderError extends Error {
   constructor(message, evidence) {
@@ -65,9 +67,9 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
     throw new ProviderError('Dịch vụ trả về nội dung không theo cấu trúc yêu cầu. Không tạo checklist chưa kiểm chứng.', evidence);
   }
 
-  const checklist = sanitizeChecklist(parsed, evidence);
+  const checklist = applyOwnerFactGuidance(sanitizeChecklist(parsed, evidence), facts, evidence);
   try {
-    assertUsefulChecklist(checklist);
+    assertUsefulChecklist(checklist, { requireRoute: facts.legalForm !== 'unknown' });
   } catch {
     throw new ProviderError('Câu trả lời thiếu căn cứ hoặc thiếu bước hành động. Không hiển thị các nhận định đó.', evidence);
   }

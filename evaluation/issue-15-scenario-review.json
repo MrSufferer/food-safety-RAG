@@ -1,0 +1,173 @@
+{
+  "recordType": "automated fixture review",
+  "runDate": "2026-09-29",
+  "snapshotReviewDate": "2026-09-29",
+  "provider": {
+    "modelId": "test-model",
+    "identity": "Local fake provider in test/app.test.mjs; not a live model run.",
+    "outputHandling": "API output after citation validation and deterministic owner-fact guidance."
+  },
+  "scenarios": [
+    {
+      "id": "unknown-registration-small-exemption-claim",
+      "reviewerNotes": "Route is withheld because registration is unknown. The app retains cited food-safety tasks, names the registration documents to check, and asks for official confirmation of the route and any exception. Decree and Law citations support the displayed qualification and preparation claims.",
+      "input": {
+        "businessType": "cafe",
+        "legalForm": "unknown",
+        "preparation": "food_and_drink",
+        "operationMode": "prepared_at_fixed_shop",
+        "smallExemptionClaim": "yes",
+        "location": "Da Nang"
+      },
+      "modelId": "test-model",
+      "snapshotDate": "2026-09-29",
+      "selectedPassages": [
+        {
+          "id": "dn-faq-24680-household-certificate-authority",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "dn-procedure-1-013855-h17",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-decree-15-2018-articles-11-12",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-law-55-2010-article-29-separate-utensils",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-law-55-2010-article-29-safe-utensils",
+          "reviewDate": "2026-09-29"
+        }
+      ],
+      "output": {
+        "route": null,
+        "tasks": [
+          {
+            "text": "Rà soát cách quán tách riêng dụng cụ và đồ chứa đựng cho thực phẩm sống, chín.",
+            "passageIds": [
+              "vn-law-55-2010-article-29-separate-utensils"
+            ]
+          },
+          {
+            "text": "Ghi lại các bước quán thực tế chuẩn bị và bán thực phẩm (quán tự chuẩn bị đồ ăn và thức uống tại địa điểm cố định) để cơ quan có thẩm quyền xác nhận các điều kiện an toàn thực phẩm tương ứng; khoản 2 Điều 12 Nghị định 15/2018/NĐ-CP vẫn yêu cầu tuân thủ các điều kiện đó với cơ sở thuộc nhóm ngoại lệ.",
+            "passageIds": [
+              "vn-decree-15-2018-articles-11-12"
+            ]
+          }
+        ],
+        "unresolved": [
+          {
+            "text": "Chưa rõ tên trên giấy đăng ký của quán. Cần biết quán đang giữ Giấy chứng nhận đăng ký hộ kinh doanh, Giấy chứng nhận đăng ký doanh nghiệp, hay giấy đăng ký hợp tác xã để xác định đúng nhóm cơ quan theo hướng dẫn của Đà Nẵng.",
+            "passageIds": [
+              "dn-faq-24680-household-certificate-authority"
+            ]
+          },
+          {
+            "text": "Chưa xác minh thành phần hồ sơ, lệ phí và thời hạn hiện hành; danh mục năm 2025 chỉ giúp nhận diện mã thủ tục.",
+            "passageIds": [
+              "dn-procedure-1-013855-h17"
+            ]
+          }
+        ],
+        "nextAction": {
+          "text": "Sau khi tìm được đúng tên giấy đăng ký, gửi câu hỏi qua Cổng Thông tin điện tử Đà Nẵng: quán tự chuẩn bị đồ ăn và thức uống tại địa điểm cố định có thuộc nhóm ngoại lệ tại Điều 12 Nghị định 15/2018/NĐ-CP không, và cơ quan nào xác nhận điều kiện an toàn thực phẩm tương ứng?",
+          "passageIds": [
+            "dn-faq-24680-household-certificate-authority",
+            "vn-decree-15-2018-articles-11-12"
+          ]
+        },
+        "exceptionAssessment": {
+          "text": "Bạn cho biết nghĩ quán có thể được miễn vì quy mô nhỏ. Chỉ dựa vào quy mô nhỏ không đủ để kết luận được miễn. Nghị định 15/2018/NĐ-CP định nghĩa “kinh doanh thực phẩm nhỏ lẻ” theo loại chủ thể/giấy đăng ký tại khoản 10 Điều 3 và liệt kê các nhóm ngoại lệ tại Điều 12; quán tự chuẩn bị đồ ăn và thức uống tại địa điểm cố định. Do chưa rõ giấy đăng ký, chưa thể đối chiếu điều kiện về loại hình chủ thể trong định nghĩa “kinh doanh thực phẩm nhỏ lẻ”. Với hoạt động chuẩn bị đồ ăn, các điều kiện về dụng cụ tại Điều 29 Luật An toàn thực phẩm vẫn cần được rà soát; việc ngoại lệ giấy chứng nhận (nếu được xác nhận) không xác nhận đã đáp ứng các điều kiện đó.",
+          "passageIds": [
+            "vn-decree-15-2018-articles-11-12",
+            "vn-law-55-2010-article-29-separate-utensils"
+          ]
+        }
+      }
+    },
+    {
+      "id": "takeaway-small-exemption-claim",
+      "reviewerNotes": "The output does not infer an exception from shop size. It cites the decree’s registration definition and listed categories, describes the reported takeaway preparation activity, keeps Law 55 preparation tasks visible, and directs the owner to ask the commune authority to confirm the applicable category and conditions.",
+      "input": {
+        "businessType": "takeaway",
+        "legalForm": "household_business",
+        "preparation": "food_and_drink",
+        "operationMode": "prepared_at_fixed_shop",
+        "smallExemptionClaim": "yes",
+        "location": "Da Nang"
+      },
+      "modelId": "test-model",
+      "snapshotDate": "2026-09-29",
+      "selectedPassages": [
+        {
+          "id": "dn-faq-24680-household-certificate-authority",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "dn-procedure-1-013855-h17",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-decree-15-2018-articles-11-12",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-law-55-2010-article-29-separate-utensils",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-law-55-2010-article-29-safe-utensils",
+          "reviewDate": "2026-09-29"
+        }
+      ],
+      "output": {
+        "route": {
+          "text": "Với giấy đăng ký hộ kinh doanh, hỏi UBND cấp xã nơi quán hoạt động để xác nhận thủ tục áp dụng.",
+          "passageIds": [
+            "dn-faq-24680-household-certificate-authority"
+          ]
+        },
+        "tasks": [
+          {
+            "text": "Rà soát cách quán tách riêng dụng cụ và đồ chứa đựng cho thực phẩm sống, chín.",
+            "passageIds": [
+              "vn-law-55-2010-article-29-separate-utensils"
+            ]
+          },
+          {
+            "text": "Ghi lại các bước quán thực tế chuẩn bị và bán thực phẩm (quán tự chuẩn bị đồ ăn và thức uống tại địa điểm cố định) để cơ quan có thẩm quyền xác nhận các điều kiện an toàn thực phẩm tương ứng; khoản 2 Điều 12 Nghị định 15/2018/NĐ-CP vẫn yêu cầu tuân thủ các điều kiện đó với cơ sở thuộc nhóm ngoại lệ.",
+            "passageIds": [
+              "vn-decree-15-2018-articles-11-12"
+            ]
+          }
+        ],
+        "unresolved": [
+          {
+            "text": "Chưa xác minh thành phần hồ sơ, lệ phí và thời hạn hiện hành; danh mục năm 2025 chỉ giúp nhận diện mã thủ tục.",
+            "passageIds": [
+              "dn-procedure-1-013855-h17"
+            ]
+          }
+        ],
+        "nextAction": {
+          "text": "Hỏi UBND cấp xã nơi quán hoạt động xem quán tự chuẩn bị đồ ăn và thức uống tại địa điểm cố định có thuộc nhóm ngoại lệ nào tại Điều 12 Nghị định 15/2018/NĐ-CP không; nêu rõ loại giấy đăng ký và hỏi những điều kiện an toàn thực phẩm nào vẫn áp dụng.",
+          "passageIds": [
+            "dn-faq-24680-household-certificate-authority",
+            "vn-decree-15-2018-articles-11-12"
+          ]
+        },
+        "exceptionAssessment": {
+          "text": "Bạn cho biết nghĩ quán có thể được miễn vì quy mô nhỏ. Chỉ dựa vào quy mô nhỏ không đủ để kết luận được miễn. Nghị định 15/2018/NĐ-CP định nghĩa “kinh doanh thực phẩm nhỏ lẻ” theo loại chủ thể/giấy đăng ký tại khoản 10 Điều 3 và liệt kê các nhóm ngoại lệ tại Điều 12; quán tự chuẩn bị đồ ăn và thức uống tại địa điểm cố định. Giấy đăng ký hộ kinh doanh bạn nêu phù hợp với tiêu chí đăng ký trong định nghĩa tại khoản 10 Điều 3; hoạt động quán tự chuẩn bị đồ ăn, thức uống là dữ kiện cần đối chiếu với nhóm “kinh doanh thực phẩm nhỏ lẻ” tại điểm d khoản 1 Điều 12. Với hoạt động chuẩn bị đồ ăn, các điều kiện về dụng cụ tại Điều 29 Luật An toàn thực phẩm vẫn cần được rà soát; việc ngoại lệ giấy chứng nhận (nếu được xác nhận) không xác nhận đã đáp ứng các điều kiện đó.",
+          "passageIds": [
+            "vn-decree-15-2018-articles-11-12",
+            "vn-law-55-2010-article-29-separate-utensils"
+          ]
+        }
+      }
+    }
+  ]
+}

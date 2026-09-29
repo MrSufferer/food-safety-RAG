@@ -6,6 +6,8 @@ const householdCafe = {
   businessType: 'cafe',
   legalForm: 'household_business',
   preparation: 'food_and_drink',
+  operationMode: 'prepared_at_fixed_shop',
+  smallExemptionClaim: 'no',
   location: 'Da Nang',
 };
 
@@ -81,7 +83,63 @@ test('user facts pass through review, evidence selection, model generation, and 
     assert.deepEqual(requestBody.messages[1].content && JSON.parse(requestBody.messages[1].content).facts, householdCafe);
     assert.equal(requestBody.response_format.type, 'json_object');
     assert.ok(JSON.parse(requestBody.messages[1].content).passages.length <= 6);
-    assert.match(requestBody.messages[0].content, /unresolved về hồ sơ, lệ phí và thời hạn chỉ dùng dn-procedure-1-013855-h17/);
+    assert.match(requestBody.messages[0].content, /unresolved về hồ sơ, lệ phí và thời hạn dùng dn-procedure-1-013855-h17/);
+  });
+});
+
+test('unknown registration withholds the office and keeps cited preparation tasks available', async () => {
+  let requestFacts;
+  const fetchImpl = async (_url, options) => {
+    requestFacts = JSON.parse(options.body).messages[1].content;
+    return fakeProviderResponse(validOutput());
+  };
+  const facts = { ...householdCafe, legalForm: 'unknown', smallExemptionClaim: 'yes' };
+
+  await withServer({ env: { OPENROUTER_API_KEY: 'test-key' }, fetchImpl }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.checklist.route, null);
+    assert.ok(body.checklist.exceptionAssessment);
+    assert.ok(body.checklist.tasks.length > 0);
+    assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
+    assert.match(body.checklist.unresolved.map((claim) => claim.text).join(' '), /giấy đăng ký/);
+    assert.ok(body.checklist.unresolved.some((claim) => claim.passageIds.includes('dn-faq-24680-household-certificate-authority')));
+    assert.ok(body.checklist.nextAction.passageIds.includes('dn-faq-24680-household-certificate-authority'));
+    assert.deepEqual(JSON.parse(requestFacts).facts, facts);
+    assert.ok(body.evidence.some((passage) => passage.id === 'vn-law-55-2010-article-29-separate-utensils'));
+  });
+});
+
+test('small takeaway exemption claim is checked against registration and operation facts while food-safety tasks remain', async () => {
+  const facts = { ...householdCafe, businessType: 'takeaway', smallExemptionClaim: 'yes' };
+  await withServer({
+    env: { OPENROUTER_API_KEY: 'test-key' },
+    fetchImpl: async () => fakeProviderResponse(validOutput()),
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts, reviewed: true }),
+    });
+    const body = await response.json();
+    const assessment = body.checklist.exceptionAssessment;
+
+    assert.equal(response.status, 200);
+    assert.match(assessment.text, /quy mô.*không/i);
+    assert.match(assessment.text, /hộ kinh doanh/);
+    assert.match(assessment.text, /chuẩn bị đồ ăn và thức uống/);
+    assert.match(assessment.text, /khoản 10 Điều 3/);
+    assert.match(assessment.text, /Điều 12/);
+    assert.match(assessment.text, /Điều 29 Luật An toàn thực phẩm/);
+    assert.match(assessment.text, /xác nhận/);
+    assert.ok(assessment.passageIds.includes('vn-decree-15-2018-articles-11-12'));
+    assert.ok(body.checklist.tasks.some((task) => task.passageIds.includes('vn-law-55-2010-article-29-separate-utensils')));
+    assert.ok(body.checklist.tasks.some((task) => task.text.includes('khoản 2 Điều 12')));
+    assert.ok(body.checklist.nextAction.text.includes('UBND cấp xã'));
   });
 });
 
@@ -185,6 +243,8 @@ test('serves the one-command demo page', async () => {
     const response = await fetch(origin);
     assert.equal(response.status, 200);
     assert.match(response.headers.get('content-type'), /text\/html/);
-    assert.match(await response.text(), /Hỏi từng bước/);
+    const html = await response.text();
+    assert.match(html, /Hỏi từng bước/);
+    assert.match(html, /Bạn nghĩ quán có thể được miễn/);
   });
 });

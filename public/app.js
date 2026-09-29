@@ -7,6 +7,17 @@ const labels = {
   },
   businessType: { cafe: 'Quán cà phê', takeaway: 'Quán takeaway', both: 'Quán cà phê và takeaway' },
   preparation: { food_and_drink: 'Chuẩn bị đồ ăn và thức uống', drinks_only: 'Chỉ pha chế thức uống' },
+  operationMode: {
+    prepared_at_fixed_shop: 'Tự chuẩn bị đồ ăn, thức uống tại địa điểm quán',
+    packaged_only: 'Đồ ăn bán tại quán là thực phẩm bao gói sẵn',
+    street_food: 'Bán thức ăn đường phố hoặc di động',
+    mixed_or_unknown: 'Hoạt động khác, kết hợp hoặc chưa rõ',
+  },
+  smallExemptionClaim: {
+    yes: 'Nghĩ quán có thể được miễn vì quy mô nhỏ',
+    no: 'Chưa cho rằng quán được miễn',
+    unsure: 'Chưa biết quán có thuộc ngoại lệ không',
+  },
 };
 
 const claimTagLabels = {
@@ -18,6 +29,7 @@ const claimTagLabels = {
   'certificate-rule': 'quy tắc cấp giấy',
   'exception-criteria': 'tiêu chí ngoại lệ',
   'no-size-only-exemption': 'không suy miễn từ quy mô',
+  'conditions-for-exception': 'điều kiện vẫn áp dụng khi thuộc ngoại lệ',
   'separate-raw-cooked-utensils': 'tách dụng cụ sống và chín',
   'safe-cooking-utensils': 'dụng cụ nấu nướng an toàn',
   'clean-dry-serving-utensils': 'dụng cụ ăn uống sạch, khô',
@@ -43,6 +55,8 @@ function factsFromForm() {
     legalForm: value('legalForm'),
     businessType: value('businessType'),
     preparation: value('preparation'),
+    operationMode: value('operationMode'),
+    smallExemptionClaim: value('smallExemptionClaim'),
     location: 'Da Nang',
   };
 }
@@ -67,7 +81,9 @@ function showStep(step) {
 }
 
 function validateStep(step) {
-  const requiredNames = step === 0 ? ['legalForm'] : ['businessType', 'preparation'];
+  const requiredNames = step === 0
+    ? ['legalForm']
+    : ['businessType', 'preparation', 'operationMode', 'smallExemptionClaim'];
   const missing = requiredNames.find((name) => !value(name));
   if (missing) {
     formMessage.textContent = 'Chọn một phương án để tiếp tục.';
@@ -83,6 +99,8 @@ function review() {
     ['Giấy đăng ký', labels.legalForm[facts.legalForm]],
     ['Hình thức quán', labels.businessType[facts.businessType]],
     ['Cách chuẩn bị', labels.preparation[facts.preparation]],
+    ['Hoạt động bán thực phẩm', labels.operationMode[facts.operationMode]],
+    ['Nhận định về ngoại lệ', labels.smallExemptionClaim[facts.smallExemptionClaim]],
     ['Địa điểm', 'Đà Nẵng'],
   ];
   reviewFacts.replaceChildren(...rows.flatMap(([term, description]) => {
@@ -161,7 +179,7 @@ function renderEvidence(evidence = [], parent = resultContent) {
 function renderFacts(facts) {
   const box = node('section', 'result-facts');
   box.append(node('h3', '', 'Thông tin bạn đã cung cấp'));
-  box.append(node('p', '', `${labels.legalForm[facts.legalForm]} · ${labels.businessType[facts.businessType]} · ${labels.preparation[facts.preparation]} · Đà Nẵng`));
+  box.append(node('p', '', `${labels.legalForm[facts.legalForm]} · ${labels.businessType[facts.businessType]} · ${labels.preparation[facts.preparation]} · ${labels.operationMode[facts.operationMode]} · ${labels.smallExemptionClaim[facts.smallExemptionClaim]} · Đà Nẵng`));
   return box;
 }
 
@@ -200,10 +218,12 @@ function showResponse(data, factsFromRequest) {
     return;
   }
 
-  const routeHeading = node('section', 'result-section');
-  routeHeading.append(node('h3', '', 'Hướng cần xác nhận'));
-  addClaim(routeHeading, checklist.route, 'route');
-  resultContent.append(routeHeading);
+  if (checklist.route) {
+    const routeHeading = node('section', 'result-section');
+    routeHeading.append(node('h3', '', 'Hướng cần xác nhận'));
+    addClaim(routeHeading, checklist.route, 'route');
+    resultContent.append(routeHeading);
+  }
 
   const tasksSection = node('section', 'result-section');
   tasksSection.append(node('h3', '', 'Việc bạn có thể rà soát'));
@@ -223,6 +243,13 @@ function showResponse(data, factsFromRequest) {
   tasksSection.append(taskList);
   tasksSection.append(node('p', 'check-note', 'Dấu tick chỉ ghi nhận việc bạn đã đọc hoặc tự chuẩn bị. Dấu tick không xác nhận tuân thủ, đủ điều kiện hay sẵn sàng nộp hồ sơ.'));
   resultContent.append(tasksSection);
+
+  if (checklist.exceptionAssessment) {
+    const exceptionSection = node('section', 'result-section');
+    exceptionSection.append(node('h3', '', 'Rà soát ngoại lệ Giấy chứng nhận'));
+    addClaim(exceptionSection, checklist.exceptionAssessment);
+    resultContent.append(exceptionSection);
+  }
 
   if (checklist.unresolved?.length) {
     const section = node('section', 'result-section unresolved');

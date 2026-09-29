@@ -8,11 +8,37 @@ const householdCafe = {
   businessType: 'cafe',
   legalForm: 'household_business',
   preparation: 'food_and_drink',
+  operationMode: 'prepared_at_fixed_shop',
+  smallExemptionClaim: 'no',
   location: 'Da Nang',
 };
 
 test('validates the registered household cafe scenario', () => {
   assert.deepEqual(validateFacts(householdCafe), householdCafe);
+});
+
+test('retrieves route evidence and independent food-safety passages when registration is unknown', () => {
+  const facts = { ...householdCafe, legalForm: 'unknown' };
+  const evidence = selectEvidence(facts, passages);
+  const ids = evidence.map((passage) => passage.id);
+
+  assert.ok(ids.includes('dn-faq-24680-household-certificate-authority'));
+  assert.ok(ids.includes('vn-law-55-2010-article-29-separate-utensils'));
+  assert.ok(ids.includes('vn-decree-15-2018-articles-11-12'));
+});
+
+test('validates reported operation details for a claimed small-shop exception', () => {
+  const facts = {
+    ...householdCafe,
+    businessType: 'takeaway',
+    smallExemptionClaim: 'yes',
+  };
+
+  assert.deepEqual(validateFacts(facts), facts);
+  const exceptionPassage = selectEvidence(facts, passages)
+    .find((passage) => passage.id === 'vn-decree-15-2018-articles-11-12');
+  assert.match(exceptionPassage.excerpt, /Khoản 10 Điều 3/);
+  assert.match(exceptionPassage.excerpt, /[Kk]inh doanh thực phẩm bao gói sẵn/);
 });
 
 test('retrieves only the compact passage set relevant to a household cafe', () => {

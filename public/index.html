@@ -71,6 +71,21 @@
                 <label class="choice"><input type="radio" name="preparation" value="food_and_drink"><span><strong>Có chuẩn bị đồ ăn và thức uống</strong><small>Ví dụ: pha chế và làm món tại quán</small></span></label>
                 <label class="choice"><input type="radio" name="preparation" value="drinks_only"><span><strong>Chỉ pha chế thức uống</strong><small>Không chế biến món ăn tại quán</small></span></label>
               </fieldset>
+              <h3 class="question-secondary">Hoạt động nào mô tả đúng nhất việc bán thực phẩm?</h3>
+              <fieldset class="choice-list compact">
+                <legend class="sr-only">Hoạt động bán thực phẩm</legend>
+                <label class="choice"><input type="radio" name="operationMode" value="prepared_at_fixed_shop"><span><strong>Tự chuẩn bị đồ ăn, thức uống tại địa điểm quán</strong><small>Khách mua tại quán hoặc mang đi</small></span></label>
+                <label class="choice"><input type="radio" name="operationMode" value="packaged_only"><span><strong>Đồ ăn bán tại quán là thực phẩm bao gói sẵn</strong><small>Quán có thể vẫn pha chế đồ uống; không mở gói hay chế biến đồ ăn tại quán</small></span></label>
+                <label class="choice"><input type="radio" name="operationMode" value="street_food"><span><strong>Bán thức ăn đường phố hoặc di động</strong><small>Không hoạt động theo hình thức quán cố định</small></span></label>
+                <label class="choice"><input type="radio" name="operationMode" value="mixed_or_unknown"><span><strong>Hoạt động khác, kết hợp hoặc tôi chưa rõ</strong><small>Cần mô tả thêm trước khi phân loại ngoại lệ</small></span></label>
+              </fieldset>
+              <h3 class="question-secondary">Bạn nghĩ quán có thể được miễn Giấy chứng nhận vì quy mô nhỏ không?</h3>
+              <fieldset class="choice-list compact">
+                <legend class="sr-only">Nhận định về ngoại lệ</legend>
+                <label class="choice"><input type="radio" name="smallExemptionClaim" value="yes"><span><strong>Có, tôi nghĩ quán nhỏ nên được miễn</strong></span></label>
+                <label class="choice"><input type="radio" name="smallExemptionClaim" value="no"><span><strong>Không, tôi chưa cho rằng quán được miễn</strong></span></label>
+                <label class="choice"><input type="radio" name="smallExemptionClaim" value="unsure"><span><strong>Tôi chưa biết quán có thuộc ngoại lệ không</strong></span></label>
+              </fieldset>
               <div class="step-actions"><button class="button button-quiet" type="button" data-back>← Quay lại</button><button class="button button-primary" type="button" data-next>Tiếp tục <span aria-hidden="true">→</span></button></div>
             </section>
 
@@ -90,7 +105,7 @@
           <div class="aside-note">
             <p class="eyebrow">Phạm vi bản thử</p>
             <h2>Một tình huống, có căn cứ.</h2>
-            <p>Hướng dẫn này tập trung vào quán cà phê hoặc takeaway ở Đà Nẵng có giấy đăng ký hộ kinh doanh.</p>
+            <p>Hướng dẫn này tập trung vào quán cà phê hoặc takeaway ở Đà Nẵng có giấy đăng ký hộ kinh doanh hoặc chưa rõ loại giấy.</p>
             <p class="aside-divider">Nếu bạn chưa rõ loại giấy, hãy chọn “Tôi chưa rõ”. Công cụ sẽ không tự đoán cơ quan tiếp nhận.</p>
           </div>
           <div class="aside-note aside-note-soft">
