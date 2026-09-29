@@ -96,7 +96,10 @@ async function requestGemini({ facts, evidence, apiKey, model, fetchImpl }) {
   return { content, model: payload.modelVersion || model };
 }
 
-async function requestOpenRouter({ facts, evidence, apiKey, model, fallbackModel, fetchImpl }) {
+async function requestOpenRouter({ facts, evidence, apiKey, model, fetchImpl }) {
+  const fallbackModel = model === OPENROUTER_FREE_FALLBACK_MODEL
+    ? undefined
+    : OPENROUTER_FREE_FALLBACK_MODEL;
   let response;
   try {
     response = await fetchImpl('https://openrouter.ai/api/v1/chat/completions', {
@@ -159,7 +162,6 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
     const preferredModel = env.GEMINI_MODEL?.trim() || GEMINI_DEFAULT_MODEL;
     const freeModel = env.GEMINI_FREE_MODEL?.trim() || GEMINI_FREE_FALLBACK_MODEL;
     const geminiModels = [...new Set([preferredModel, freeModel])];
-    let preferredModelFailed = false;
 
     for (const [index, model] of geminiModels.entries()) {
       try {
@@ -167,28 +169,13 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
         const notice = index > 0 ? GEMINI_FALLBACK_NOTICE : undefined;
         return parseChecklist(result.content, facts, evidence, result.model, notice);
       } catch {
-        if (index === 0) preferredModelFailed = true;
+        continue;
       }
     }
 
     if (!openRouterApiKey) {
       throw new ProviderError('Gemini chưa tạo được checklist. Hãy cấu hình OPENROUTER_API_KEY để bật mô hình dự phòng; các đoạn nguồn đã chọn được giữ bên dưới.', evidence);
     }
-
-    const openRouterModel = env.OPENROUTER_MODEL?.trim() || OPENROUTER_DEFAULT_MODEL;
-    const hasOpenRouterFallback = openRouterModel !== OPENROUTER_FREE_FALLBACK_MODEL;
-    const result = await requestOpenRouter({
-      facts,
-      evidence,
-      apiKey: openRouterApiKey,
-      model: openRouterModel,
-      fallbackModel: hasOpenRouterFallback ? OPENROUTER_FREE_FALLBACK_MODEL : undefined,
-      fetchImpl,
-    });
-    if (preferredModelFailed && result.model !== RATE_LIMIT_FALLBACK_MODEL) {
-      return { ...result, generationNotice: OPENROUTER_FALLBACK_NOTICE };
-    }
-    return result;
   }
 
   if (!openRouterApiKey) {
@@ -196,13 +183,15 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
   }
 
   const model = env.OPENROUTER_MODEL?.trim() || OPENROUTER_DEFAULT_MODEL;
-  const hasFreeFallback = model !== OPENROUTER_FREE_FALLBACK_MODEL;
-  return requestOpenRouter({
+  const result = await requestOpenRouter({
     facts,
     evidence,
     apiKey: openRouterApiKey,
     model,
-    fallbackModel: hasFreeFallback ? OPENROUTER_FREE_FALLBACK_MODEL : undefined,
     fetchImpl,
   });
+  if (geminiApiKey && result.model !== RATE_LIMIT_FALLBACK_MODEL) {
+    return { ...result, generationNotice: OPENROUTER_FALLBACK_NOTICE };
+  }
+  return result;
 }
