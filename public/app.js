@@ -41,6 +41,7 @@ const indicators = [...document.querySelectorAll('[data-step-indicator]')];
 const formMessage = document.querySelector('#form-message');
 const reviewFacts = document.querySelector('#review-facts');
 const reviewConfirm = document.querySelector('#review-confirm');
+const questionInput = document.querySelector('#question');
 const submitButton = document.querySelector('#submit-button');
 const result = document.querySelector('#result');
 const resultContent = document.querySelector('#result-content');
@@ -133,6 +134,65 @@ function appendCitations(parent, citations = []) {
   parent.append(group);
 }
 
+function appendSourceLink(parent, source, label) {
+  if (!source?.url) return;
+  const link = node('a', '', label || source.label || 'Mở nguồn chính thức ↗');
+  link.href = source.url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  parent.append(link);
+}
+
+function renderQuestionAnswer(answer, question) {
+  const section = node('section', `question-answer question-answer-${answer.kind || 'unknown'}`);
+  section.setAttribute('aria-labelledby', 'question-answer-title');
+  section.append(node('p', 'eyebrow', 'Câu trả lời có giới hạn nguồn'));
+  const heading = node('h3', '', answer.title || 'Câu hỏi của bạn');
+  heading.id = 'question-answer-title';
+  section.append(heading);
+  if (question) section.append(node('p', 'question-echo', `Bạn hỏi: ${question}`));
+  if (answer.summary) section.append(node('p', 'question-summary', answer.summary));
+
+  if (answer.unresolvedDetails?.length) {
+    const list = node('ul', 'question-details');
+    for (const detail of answer.unresolvedDetails) {
+      const item = node('li', 'question-detail');
+      const heading = node('div', 'question-detail-heading');
+      heading.append(node('strong', '', detail.label));
+      heading.append(node('span', 'status-pill', detail.status));
+      item.append(heading, node('p', '', detail.confirmationQuestion));
+      list.append(item);
+    }
+    section.append(list);
+  }
+
+  if (answer.sourceNote) section.append(node('p', 'question-source-note', answer.sourceNote));
+  if (answer.source) {
+    const source = node('div', 'question-source');
+    appendSourceLink(source, answer.source);
+    const dates = [
+      answer.source.issuedDate ? `Ban hành: ${answer.source.issuedDate}` : '',
+      answer.source.effectiveDate ? `Hiệu lực: ${answer.source.effectiveDate}` : 'Hiệu lực: chưa ghi nhận',
+      answer.source.reviewDate ? `Rà soát: ${answer.source.reviewDate}` : '',
+    ].filter(Boolean).join(' · ');
+    if (dates) source.append(node('p', 'source-dates', dates));
+    section.append(source);
+  }
+
+  if (answer.confirmationQuestion) {
+    section.append(node('h4', '', 'Cách hỏi cơ quan chính thức'));
+    section.append(node('p', 'question-next-step', answer.confirmationQuestion));
+  }
+  if (answer.route) {
+    const route = node('div', 'question-route');
+    appendSourceLink(route, answer.route, answer.route.label);
+    if (answer.route.source?.note) route.append(node('p', 'source-dates', answer.route.source.note));
+    if (answer.route.source) appendSourceLink(route, answer.route.source, `${answer.route.source.label} ↗`);
+    section.append(route);
+  }
+  return section;
+}
+
 function addClaim(parent, claim, className = '') {
   if (!claim) return;
   const article = node('article', `claim ${className}`.trim());
@@ -198,7 +258,10 @@ function showResponse(data, factsFromRequest) {
   const facts = data.facts || factsFromRequest;
   if (facts) resultContent.append(renderFacts(facts));
   const reviewedOn = data.snapshotDate || '2026-09-29';
-  document.querySelector('#snapshot-badge').textContent = `Nguồn rà soát ${reviewedOn}${data.model ? ` · ${data.model}` : ''}`;
+  const modelLabel = data.model && data.model !== 'local:question-boundary-v1' ? ` · ${data.model}` : '';
+  document.querySelector('#snapshot-badge').textContent = `Nguồn rà soát ${reviewedOn}${modelLabel}`;
+
+  if (data.questionAnswer) resultContent.append(renderQuestionAnswer(data.questionAnswer, data.question));
 
   if (data.error) {
     const error = node('div', 'error-box');
@@ -220,7 +283,7 @@ function showResponse(data, factsFromRequest) {
 
   const checklist = data.checklist;
   if (!checklist) {
-    resultContent.append(node('div', 'error-box', 'Không có checklist để hiển thị.'));
+    if (!data.questionAnswer) resultContent.append(node('div', 'error-box', 'Không có checklist để hiển thị.'));
     renderEvidence(data.evidence);
     result.classList.add('is-ready');
     return;
@@ -296,14 +359,16 @@ form.addEventListener('submit', async (event) => {
     return;
   }
   const facts = factsFromForm();
+  const question = questionInput.value.trim();
   submitButton.disabled = true;
+  form.setAttribute('aria-busy', 'true');
   submitButton.textContent = 'Đang chọn nguồn và tạo câu trả lời…';
-  formMessage.textContent = 'Đang xử lý. Chỉ các nguồn liên quan đến tình huống này được gửi để tạo câu trả lời.';
+  formMessage.textContent = 'Đang chọn nguồn liên quan đến tình huống và tạo phản hồi có trích dẫn.';
   try {
     const response = await fetch('/api/checklist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ facts, reviewed: true }),
+      body: JSON.stringify({ facts, reviewed: true, question }),
     });
     const data = await response.json();
     showResponse(data, facts);
@@ -312,6 +377,7 @@ form.addEventListener('submit', async (event) => {
     showResponse({ error: 'Không kết nối được với máy chủ bản thử. Hãy kiểm tra máy chủ đang chạy rồi thử lại.', facts, snapshotDate: '2026-09-29' }, facts);
   } finally {
     submitButton.disabled = false;
+    form.removeAttribute('aria-busy');
     submitButton.innerHTML = 'Tạo checklist có nguồn <span aria-hidden="true">→</span>';
     formMessage.textContent = '';
   }

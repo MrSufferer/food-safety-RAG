@@ -49,6 +49,8 @@ export function sanitizeChecklist(input, evidence) {
     .slice(0, 4);
   const unresolved = (Array.isArray(input?.unresolved) ? input.unresolved : [])
     .map((claim) => validClaim(claim, evidence, new Set([
+      'household-business-authority',
+      'conditional-route',
       'unverified-administrative-details',
       'certificate-rule',
       'exception-criteria',

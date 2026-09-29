@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { createServer } from '../server.mjs';
+
+const issue16Review = JSON.parse(await readFile(new URL('../evaluation/issue-16-scenario-review.json', import.meta.url), 'utf8'));
 
 const householdCafe = {
   businessType: 'cafe',
@@ -241,6 +244,68 @@ test('keeps unsupported registration routes out of the model request', async () 
   assert.equal(providerCalled, false);
 });
 
+test('saves and returns reviewed filing and PCCC boundary scenarios without calling the provider', async () => {
+  let providerCalled = false;
+  await withServer({
+    env: { OPENROUTER_API_KEY: 'test-key' },
+    fetchImpl: async () => { providerCalled = true; throw new Error('boundary questions must not call the provider'); },
+  }, async (origin) => {
+    for (const scenario of issue16Review.scenarios) {
+      const response = await fetch(`${origin}/api/checklist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(scenario.input),
+      });
+      const body = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.deepEqual(body.facts, scenario.input.facts);
+      assert.equal(body.question, scenario.input.question);
+      assert.equal(body.model, scenario.modelIdentity);
+      assert.equal(body.modelIdentity, scenario.modelIdentity);
+      assert.equal(body.snapshotDate, scenario.snapshotDate);
+      assert.deepEqual(body.questionAnswer, scenario.output.questionAnswer);
+      assert.deepEqual(body.checklist, scenario.output.checklist);
+      assert.deepEqual(body.evidence.map(({ id, issuedDate, effectiveDate, reviewDate }) => ({ id, issuedDate, effectiveDate, reviewDate })), scenario.selectedPassages);
+      assert.ok(body.checklist.tasks.length > 0);
+      assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
+    }
+  });
+  assert.equal(providerCalled, false);
+});
+
+test('keeps filing answers for an unknown registration type from guessing the receiving office', async () => {
+  const facts = { ...householdCafe, legalForm: 'unknown' };
+  await withServer({ env: {}, fetchImpl: async () => { throw new Error('must not call'); } }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts, reviewed: true, question: 'Hồ sơ, lệ phí và thời hạn hiện hành là gì?' }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.questionAnswer.kind, 'filing_details');
+    assert.ok(body.questionAnswer.unresolvedDetails.every((detail) => detail.status === 'chưa xác minh'));
+    assert.ok(body.questionAnswer.unresolvedDetails.every((detail) => !detail.confirmationQuestion.includes('UBND cấp xã')));
+    assert.equal(body.checklist.route, null);
+    assert.ok(body.checklist.tasks.length > 0);
+    assert.equal(body.checklist.tasks[0].citations[0].snapshotDate, body.snapshotDate);
+  });
+});
+
+test('rejects a question longer than the supported input limit', async () => {
+  await withServer({ env: {}, fetchImpl: async () => { throw new Error('must not call'); } }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true, question: 'x'.repeat(501) }),
+    });
+    assert.equal(response.status, 400);
+    assert.match((await response.json()).error, /500 ký tự/);
+  });
+});
+
 test('serves the one-command demo page', async () => {
   await withServer({ env: {} }, async (origin) => {
     const response = await fetch(origin);
@@ -249,5 +314,6 @@ test('serves the one-command demo page', async () => {
     const html = await response.text();
     assert.match(html, /Hỏi từng bước/);
     assert.match(html, /Bạn nghĩ quán có thể được miễn/);
+    assert.match(html, /id="question"/);
   });
 });

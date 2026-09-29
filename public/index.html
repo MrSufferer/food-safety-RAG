@@ -94,6 +94,11 @@
               <h3 id="step-three-title">Kiểm tra lại thông tin bạn nhập</h3>
               <p class="help-text">Đây là thông tin do bạn cung cấp, chưa phải nhận định từ nguồn pháp luật.</p>
               <dl id="review-facts" class="owner-facts"></dl>
+              <div class="question-field">
+                <label for="question">Câu hỏi thêm <span>(không bắt buộc)</span></label>
+                <textarea id="question" name="question" maxlength="500" aria-describedby="question-help" placeholder="Ví dụ: Quán có cần giấy phép PCCC không?"></textarea>
+                <p class="help-text" id="question-help">Có thể hỏi về hồ sơ, lệ phí, thời hạn hiện hành hoặc PCCC. Câu hỏi ngoài bộ nguồn sẽ được giữ ở mức chưa xác minh.</p>
+              </div>
               <label class="review-check"><input id="review-confirm" type="checkbox"><span>Tôi đã xem lại và xác nhận thông tin trên đúng với quán.</span></label>
               <div class="step-actions"><button class="button button-quiet" type="button" data-back>← Quay lại sửa</button><button class="button button-primary" id="submit-button" type="submit">Tạo checklist có nguồn <span aria-hidden="true">→</span></button></div>
             </section>

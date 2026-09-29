@@ -1,0 +1,473 @@
+{
+  "recordType": "deterministic scenario review",
+  "runDate": "2026-09-29",
+  "reviewer": "Issue #16 implementation review",
+  "resolver": {
+    "modelIdentity": "local:question-boundary-v1",
+    "identity": "Local deterministic resolver; external language model is not called for these question scenarios."
+  },
+  "scenarios": [
+    {
+      "id": "current-food-safety-filing-details",
+      "reviewerNotes": "Claim audit: dossier composition, fee, and processing time are each labeled “chưa xác minh” and have separate questions for UBND cấp xã. The selected 2025 procedure catalog has no recorded effective date and is explicitly limited to identifying the procedure; it is not used to infer current filing requirements. The checklist keeps independently supported food-preparation tasks with citations beside each claim. No unsupported or misleading procedural claim found.",
+      "input": {
+        "facts": {
+          "businessType": "cafe",
+          "legalForm": "household_business",
+          "preparation": "food_and_drink",
+          "operationMode": "prepared_at_fixed_shop",
+          "smallExemptionClaim": "no",
+          "location": "Da Nang"
+        },
+        "reviewed": true,
+        "question": "Hồ sơ, lệ phí và thời hạn giải quyết hiện hành là gì?"
+      },
+      "modelIdentity": "local:question-boundary-v1",
+      "snapshotDate": "2026-09-29",
+      "selectedPassages": [
+        {
+          "id": "dn-faq-24680-household-certificate-authority",
+          "issuedDate": "2026-06-23",
+          "effectiveDate": null,
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "dn-procedure-1-013855-h17",
+          "issuedDate": "2025-08-28",
+          "effectiveDate": null,
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-decree-15-2018-articles-11-12",
+          "issuedDate": "2018-02-02",
+          "effectiveDate": "2018-02-02",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-law-55-2010-article-29-separate-utensils",
+          "issuedDate": "2010-06-17",
+          "effectiveDate": "2011-07-01",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-law-55-2010-article-29-safe-utensils",
+          "issuedDate": "2010-06-17",
+          "effectiveDate": "2011-07-01",
+          "reviewDate": "2026-09-29"
+        }
+      ],
+      "output": {
+        "questionAnswer": {
+          "kind": "filing_details",
+          "status": "unverified",
+          "title": "Hồ sơ, lệ phí và thời hạn: chưa xác minh",
+          "summary": "Bộ nguồn hiện có không xác nhận các chi tiết đang áp dụng. Danh mục thủ tục được chọn chỉ nêu tên và mã thủ tục; không nêu đủ hồ sơ, lệ phí hoặc thời hạn hiện hành.",
+          "unresolvedDetails": [
+            {
+              "key": "dossier",
+              "label": "Thành phần hồ sơ",
+              "status": "chưa xác minh",
+              "confirmationQuestion": "Hỏi UBND cấp xã: “Với cơ sở của tôi, thành phần hồ sơ đang áp dụng hôm nay gồm những gì? Xin gửi đường dẫn thủ tục và căn cứ hiện hành.”"
+            },
+            {
+              "key": "fee",
+              "label": "Lệ phí",
+              "status": "chưa xác minh",
+              "confirmationQuestion": "Hỏi UBND cấp xã: “Lệ phí hiện hành cho trường hợp của tôi là bao nhiêu? Xin gửi căn cứ và đường dẫn chính thức đang áp dụng.”"
+            },
+            {
+              "key": "processing_time",
+              "label": "Thời hạn xử lý",
+              "status": "chưa xác minh",
+              "confirmationQuestion": "Hỏi UBND cấp xã: “Thời hạn xử lý hiện hành là bao lâu, tính từ mốc nào? Xin gửi căn cứ và đường dẫn thủ tục đang áp dụng.”"
+            }
+          ],
+          "sourceNote": "Nguồn được chọn ban hành ngày 2025-08-28, ngày hiệu lực: chưa ghi nhận. Nguồn này được rà soát ngày 2026-09-29; ngày rà soát không thay thế ngày hiệu lực. Vì thiếu xác nhận hiện hành, không dùng riêng nguồn này hoặc gộp với tài liệu mâu thuẫn/chưa rõ hiệu lực để kết luận yêu cầu hiện tại.",
+          "source": {
+            "id": "dn-procedure-1-013855-h17",
+            "label": "Danh mục thủ tục hành chính cấp xã Đà Nẵng, Quyết định 1234/QĐ-UBND · Lĩnh vực an toàn thực phẩm · mã 1.013855.H17",
+            "url": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+            "issuedDate": "2025-08-28",
+            "effectiveDate": null,
+            "reviewDate": "2026-09-29",
+            "status": "effective_date_unrecorded"
+          }
+        },
+        "checklist": {
+          "route": {
+            "text": "Nguồn địa phương nêu UBND cấp xã có thẩm quyền cấp Giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm cho cơ sở có đăng ký hộ kinh doanh. Hỏi cơ quan này để xác nhận thủ tục áp dụng cho quán của bạn; nguồn không xác nhận riêng quán có phải xin giấy hay không.",
+            "passageIds": [
+              "dn-faq-24680-household-certificate-authority"
+            ],
+            "citations": [
+              {
+                "id": "dn-faq-24680-household-certificate-authority",
+                "label": "Hỏi đáp Cổng Thông tin điện tử thành phố Đà Nẵng · Thẩm quyền cấp Giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm",
+                "url": "https://cttdt.danangportal.gov.vn/web/dng/hoi-dap-public?_HoiDap_WAR_sdthoidapportlet_action=chiTietHoiDapPublic&hoiDapId=24680&p_p_id=HoiDap_WAR_sdthoidapportlet&p_p_lifecycle=0&p_p_mode=view&p_p_state=normal",
+                "sourcePageUrl": "https://cttdt.danangportal.gov.vn/web/dng/hoi-dap-public?_HoiDap_WAR_sdthoidapportlet_action=chiTietHoiDapPublic&hoiDapId=24680&p_p_id=HoiDap_WAR_sdthoidapportlet&p_p_lifecycle=0&p_p_mode=view&p_p_state=normal",
+                "publishedDate": "2026-06-23",
+                "effectiveDate": null,
+                "snapshotDate": "2026-09-29"
+              }
+            ]
+          },
+          "tasks": [
+            {
+              "text": "Rà soát việc dùng dụng cụ và đồ chứa riêng cho thực phẩm sống và thực phẩm chín.",
+              "passageIds": [
+                "vn-law-55-2010-article-29-separate-utensils"
+              ],
+              "citations": [
+                {
+                  "id": "vn-law-55-2010-article-29-separate-utensils",
+                  "label": "Luật 55/2010/QH12 về An toàn thực phẩm · Điều 29 khoản 1 · cơ sở chế biến, kinh doanh dịch vụ ăn uống",
+                  "url": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "sourcePageUrl": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "publishedDate": "2010-06-17",
+                  "effectiveDate": "2011-07-01",
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            },
+            {
+              "text": "Rà soát dụng cụ nấu nướng, chế biến để bảo đảm vệ sinh an toàn.",
+              "passageIds": [
+                "vn-law-55-2010-article-29-safe-utensils"
+              ],
+              "citations": [
+                {
+                  "id": "vn-law-55-2010-article-29-safe-utensils",
+                  "label": "Luật 55/2010/QH12 về An toàn thực phẩm · Điều 29 khoản 2–3 · dụng cụ chế biến và ăn uống",
+                  "url": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "sourcePageUrl": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "publishedDate": "2010-06-17",
+                  "effectiveDate": "2011-07-01",
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            },
+            {
+              "text": "Rà soát dụng cụ ăn uống: vật liệu an toàn, được rửa sạch và giữ khô.",
+              "passageIds": [
+                "vn-law-55-2010-article-29-safe-utensils"
+              ],
+              "citations": [
+                {
+                  "id": "vn-law-55-2010-article-29-safe-utensils",
+                  "label": "Luật 55/2010/QH12 về An toàn thực phẩm · Điều 29 khoản 2–3 · dụng cụ chế biến và ăn uống",
+                  "url": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "sourcePageUrl": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "publishedDate": "2010-06-17",
+                  "effectiveDate": "2011-07-01",
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            }
+          ],
+          "unresolved": [
+            {
+              "text": "Thành phần hồ sơ hiện hành: chưa xác minh.",
+              "passageIds": [
+                "dn-procedure-1-013855-h17"
+              ],
+              "citations": [
+                {
+                  "id": "dn-procedure-1-013855-h17",
+                  "label": "Danh mục thủ tục hành chính cấp xã Đà Nẵng, Quyết định 1234/QĐ-UBND · Lĩnh vực an toàn thực phẩm · mã 1.013855.H17",
+                  "url": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "sourcePageUrl": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "publishedDate": "2025-08-28",
+                  "effectiveDate": null,
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            },
+            {
+              "text": "Lệ phí hiện hành: chưa xác minh.",
+              "passageIds": [
+                "dn-procedure-1-013855-h17"
+              ],
+              "citations": [
+                {
+                  "id": "dn-procedure-1-013855-h17",
+                  "label": "Danh mục thủ tục hành chính cấp xã Đà Nẵng, Quyết định 1234/QĐ-UBND · Lĩnh vực an toàn thực phẩm · mã 1.013855.H17",
+                  "url": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "sourcePageUrl": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "publishedDate": "2025-08-28",
+                  "effectiveDate": null,
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            },
+            {
+              "text": "Thời hạn xử lý hiện hành: chưa xác minh.",
+              "passageIds": [
+                "dn-procedure-1-013855-h17"
+              ],
+              "citations": [
+                {
+                  "id": "dn-procedure-1-013855-h17",
+                  "label": "Danh mục thủ tục hành chính cấp xã Đà Nẵng, Quyết định 1234/QĐ-UBND · Lĩnh vực an toàn thực phẩm · mã 1.013855.H17",
+                  "url": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "sourcePageUrl": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "publishedDate": "2025-08-28",
+                  "effectiveDate": null,
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            }
+          ],
+          "nextAction": {
+            "text": "Hỏi UBND cấp xã để xác nhận riêng thành phần hồ sơ, lệ phí và thời hạn đang áp dụng; đề nghị cung cấp căn cứ và đường dẫn thủ tục hiện hành.",
+            "passageIds": [
+              "dn-faq-24680-household-certificate-authority",
+              "dn-procedure-1-013855-h17"
+            ],
+            "citations": [
+              {
+                "id": "dn-faq-24680-household-certificate-authority",
+                "label": "Hỏi đáp Cổng Thông tin điện tử thành phố Đà Nẵng · Thẩm quyền cấp Giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm",
+                "url": "https://cttdt.danangportal.gov.vn/web/dng/hoi-dap-public?_HoiDap_WAR_sdthoidapportlet_action=chiTietHoiDapPublic&hoiDapId=24680&p_p_id=HoiDap_WAR_sdthoidapportlet&p_p_lifecycle=0&p_p_mode=view&p_p_state=normal",
+                "sourcePageUrl": "https://cttdt.danangportal.gov.vn/web/dng/hoi-dap-public?_HoiDap_WAR_sdthoidapportlet_action=chiTietHoiDapPublic&hoiDapId=24680&p_p_id=HoiDap_WAR_sdthoidapportlet&p_p_lifecycle=0&p_p_mode=view&p_p_state=normal",
+                "publishedDate": "2026-06-23",
+                "effectiveDate": null,
+                "snapshotDate": "2026-09-29"
+              },
+              {
+                "id": "dn-procedure-1-013855-h17",
+                "label": "Danh mục thủ tục hành chính cấp xã Đà Nẵng, Quyết định 1234/QĐ-UBND · Lĩnh vực an toàn thực phẩm · mã 1.013855.H17",
+                "url": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                "sourcePageUrl": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                "publishedDate": "2025-08-28",
+                "effectiveDate": null,
+                "snapshotDate": "2026-09-29"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fire-safety-permit-outside-selected-corpus",
+      "reviewerNotes": "Claim audit: the answer states that the selected corpus covers food safety and cannot establish whether a PCCC permit, procedure, or documents apply. It invents no PCCC form, filing, fee, or requirement. The official Da Nang portal and source identifying PC07 are presented only as a contact route; their note disclaims confirming what applies. Cited food-preparation tasks remain available beside the answer. No unsupported or misleading legal or procedural claim found.",
+      "input": {
+        "facts": {
+          "businessType": "cafe",
+          "legalForm": "household_business",
+          "preparation": "food_and_drink",
+          "operationMode": "prepared_at_fixed_shop",
+          "smallExemptionClaim": "no",
+          "location": "Da Nang"
+        },
+        "reviewed": true,
+        "question": "Quán cà phê của tôi có cần giấy phép phòng cháy chữa cháy không?"
+      },
+      "modelIdentity": "local:question-boundary-v1",
+      "snapshotDate": "2026-09-29",
+      "selectedPassages": [
+        {
+          "id": "dn-faq-24680-household-certificate-authority",
+          "issuedDate": "2026-06-23",
+          "effectiveDate": null,
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "dn-procedure-1-013855-h17",
+          "issuedDate": "2025-08-28",
+          "effectiveDate": null,
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-decree-15-2018-articles-11-12",
+          "issuedDate": "2018-02-02",
+          "effectiveDate": "2018-02-02",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-law-55-2010-article-29-separate-utensils",
+          "issuedDate": "2010-06-17",
+          "effectiveDate": "2011-07-01",
+          "reviewDate": "2026-09-29"
+        },
+        {
+          "id": "vn-law-55-2010-article-29-safe-utensils",
+          "issuedDate": "2010-06-17",
+          "effectiveDate": "2011-07-01",
+          "reviewDate": "2026-09-29"
+        }
+      ],
+      "output": {
+        "questionAnswer": {
+          "kind": "fire_safety",
+          "status": "outside_food_safety_corpus",
+          "title": "Chưa thể xác định yêu cầu PCCC từ bộ nguồn này",
+          "summary": "Các đoạn đã chọn chỉ nói về an toàn thực phẩm, không đủ căn cứ để xác định quán của bạn có cần thủ tục hoặc giấy tờ phòng cháy, chữa cháy nào hay không. Công cụ không kết luận rằng quán cần “giấy phép PCCC”, và không nêu mẫu đơn, hồ sơ, lệ phí hay nghĩa vụ PCCC.",
+          "confirmationQuestion": "Mở Cổng thông tin thành phố Đà Nẵng để tìm kênh liên hệ chính thức của Công an thành phố; hỏi Phòng Cảnh sát PCCC và CNCH (PC07) hoặc đề nghị chuyển câu hỏi đến đúng đầu mối. Nêu địa chỉ và mô tả mặt bằng, rồi hỏi: “Với cơ sở tại địa chỉ này, hiện có yêu cầu PCCC hoặc thủ tục nào áp dụng không? Xin cho biết căn cứ pháp lý và đường dẫn chính thức; nếu cơ quan khác phụ trách, xin hướng dẫn đầu mối.”",
+          "route": {
+            "label": "Cổng thông tin thành phố Đà Nẵng",
+            "url": "https://danang.gov.vn/",
+            "source": {
+              "label": "Cổng thông tin xã Thăng Trường · thông tin về Phòng Cảnh sát PCCC và CNCH (PC07)",
+              "url": "https://thangtruong.danang.gov.vn/chi-tiet-tin/group/151/nid/417241/thang-truong-to-chuc-huan-luyen-nghiep-vu-pccc-va-cnch-cho-luc-luong-dan-phong-truong-thon",
+              "issuedDate": "2026-09-22",
+              "reviewDate": "2026-09-29",
+              "note": "Nguồn này giúp tìm đúng tên đơn vị để hỏi; không xác nhận yêu cầu, giấy tờ hoặc thủ tục áp dụng cho quán."
+            }
+          }
+        },
+        "checklist": {
+          "route": {
+            "text": "Nguồn địa phương nêu UBND cấp xã có thẩm quyền cấp Giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm cho cơ sở có đăng ký hộ kinh doanh. Hỏi cơ quan này để xác nhận thủ tục áp dụng cho quán của bạn; nguồn không xác nhận riêng quán có phải xin giấy hay không.",
+            "passageIds": [
+              "dn-faq-24680-household-certificate-authority"
+            ],
+            "citations": [
+              {
+                "id": "dn-faq-24680-household-certificate-authority",
+                "label": "Hỏi đáp Cổng Thông tin điện tử thành phố Đà Nẵng · Thẩm quyền cấp Giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm",
+                "url": "https://cttdt.danangportal.gov.vn/web/dng/hoi-dap-public?_HoiDap_WAR_sdthoidapportlet_action=chiTietHoiDapPublic&hoiDapId=24680&p_p_id=HoiDap_WAR_sdthoidapportlet&p_p_lifecycle=0&p_p_mode=view&p_p_state=normal",
+                "sourcePageUrl": "https://cttdt.danangportal.gov.vn/web/dng/hoi-dap-public?_HoiDap_WAR_sdthoidapportlet_action=chiTietHoiDapPublic&hoiDapId=24680&p_p_id=HoiDap_WAR_sdthoidapportlet&p_p_lifecycle=0&p_p_mode=view&p_p_state=normal",
+                "publishedDate": "2026-06-23",
+                "effectiveDate": null,
+                "snapshotDate": "2026-09-29"
+              }
+            ]
+          },
+          "tasks": [
+            {
+              "text": "Rà soát việc dùng dụng cụ và đồ chứa riêng cho thực phẩm sống và thực phẩm chín.",
+              "passageIds": [
+                "vn-law-55-2010-article-29-separate-utensils"
+              ],
+              "citations": [
+                {
+                  "id": "vn-law-55-2010-article-29-separate-utensils",
+                  "label": "Luật 55/2010/QH12 về An toàn thực phẩm · Điều 29 khoản 1 · cơ sở chế biến, kinh doanh dịch vụ ăn uống",
+                  "url": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "sourcePageUrl": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "publishedDate": "2010-06-17",
+                  "effectiveDate": "2011-07-01",
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            },
+            {
+              "text": "Rà soát dụng cụ nấu nướng, chế biến để bảo đảm vệ sinh an toàn.",
+              "passageIds": [
+                "vn-law-55-2010-article-29-safe-utensils"
+              ],
+              "citations": [
+                {
+                  "id": "vn-law-55-2010-article-29-safe-utensils",
+                  "label": "Luật 55/2010/QH12 về An toàn thực phẩm · Điều 29 khoản 2–3 · dụng cụ chế biến và ăn uống",
+                  "url": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "sourcePageUrl": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "publishedDate": "2010-06-17",
+                  "effectiveDate": "2011-07-01",
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            },
+            {
+              "text": "Rà soát dụng cụ ăn uống: vật liệu an toàn, được rửa sạch và giữ khô.",
+              "passageIds": [
+                "vn-law-55-2010-article-29-safe-utensils"
+              ],
+              "citations": [
+                {
+                  "id": "vn-law-55-2010-article-29-safe-utensils",
+                  "label": "Luật 55/2010/QH12 về An toàn thực phẩm · Điều 29 khoản 2–3 · dụng cụ chế biến và ăn uống",
+                  "url": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "sourcePageUrl": "https://vanban.chinhphu.vn/?docid=96032&pageid=27160",
+                  "publishedDate": "2010-06-17",
+                  "effectiveDate": "2011-07-01",
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            }
+          ],
+          "unresolved": [
+            {
+              "text": "Thành phần hồ sơ hiện hành: chưa xác minh.",
+              "passageIds": [
+                "dn-procedure-1-013855-h17"
+              ],
+              "citations": [
+                {
+                  "id": "dn-procedure-1-013855-h17",
+                  "label": "Danh mục thủ tục hành chính cấp xã Đà Nẵng, Quyết định 1234/QĐ-UBND · Lĩnh vực an toàn thực phẩm · mã 1.013855.H17",
+                  "url": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "sourcePageUrl": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "publishedDate": "2025-08-28",
+                  "effectiveDate": null,
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            },
+            {
+              "text": "Lệ phí hiện hành: chưa xác minh.",
+              "passageIds": [
+                "dn-procedure-1-013855-h17"
+              ],
+              "citations": [
+                {
+                  "id": "dn-procedure-1-013855-h17",
+                  "label": "Danh mục thủ tục hành chính cấp xã Đà Nẵng, Quyết định 1234/QĐ-UBND · Lĩnh vực an toàn thực phẩm · mã 1.013855.H17",
+                  "url": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "sourcePageUrl": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "publishedDate": "2025-08-28",
+                  "effectiveDate": null,
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            },
+            {
+              "text": "Thời hạn xử lý hiện hành: chưa xác minh.",
+              "passageIds": [
+                "dn-procedure-1-013855-h17"
+              ],
+              "citations": [
+                {
+                  "id": "dn-procedure-1-013855-h17",
+                  "label": "Danh mục thủ tục hành chính cấp xã Đà Nẵng, Quyết định 1234/QĐ-UBND · Lĩnh vực an toàn thực phẩm · mã 1.013855.H17",
+                  "url": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "sourcePageUrl": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                  "publishedDate": "2025-08-28",
+                  "effectiveDate": null,
+                  "snapshotDate": "2026-09-29"
+                }
+              ]
+            }
+          ],
+          "nextAction": {
+            "text": "Hỏi UBND cấp xã để xác nhận riêng thành phần hồ sơ, lệ phí và thời hạn đang áp dụng; đề nghị cung cấp căn cứ và đường dẫn thủ tục hiện hành.",
+            "passageIds": [
+              "dn-faq-24680-household-certificate-authority",
+              "dn-procedure-1-013855-h17"
+            ],
+            "citations": [
+              {
+                "id": "dn-faq-24680-household-certificate-authority",
+                "label": "Hỏi đáp Cổng Thông tin điện tử thành phố Đà Nẵng · Thẩm quyền cấp Giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm",
+                "url": "https://cttdt.danangportal.gov.vn/web/dng/hoi-dap-public?_HoiDap_WAR_sdthoidapportlet_action=chiTietHoiDapPublic&hoiDapId=24680&p_p_id=HoiDap_WAR_sdthoidapportlet&p_p_lifecycle=0&p_p_mode=view&p_p_state=normal",
+                "sourcePageUrl": "https://cttdt.danangportal.gov.vn/web/dng/hoi-dap-public?_HoiDap_WAR_sdthoidapportlet_action=chiTietHoiDapPublic&hoiDapId=24680&p_p_id=HoiDap_WAR_sdthoidapportlet&p_p_lifecycle=0&p_p_mode=view&p_p_state=normal",
+                "publishedDate": "2026-06-23",
+                "effectiveDate": null,
+                "snapshotDate": "2026-09-29"
+              },
+              {
+                "id": "dn-procedure-1-013855-h17",
+                "label": "Danh mục thủ tục hành chính cấp xã Đà Nẵng, Quyết định 1234/QĐ-UBND · Lĩnh vực an toàn thực phẩm · mã 1.013855.H17",
+                "url": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                "sourcePageUrl": "https://duyxuyen.danang.gov.vn/documents/1640879/1902799/Thu%2Btuc%2Bcap%2Bxa.pdf/4844c89b-5a07-a8c7-7151-e47162541bb8?t=1757389588514",
+                "publishedDate": "2025-08-28",
+                "effectiveDate": null,
+                "snapshotDate": "2026-09-29"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

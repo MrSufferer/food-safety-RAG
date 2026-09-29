@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { selectEvidence, validateFacts, isSupportedScenario } from './src/evidence.mjs';
 import { passages, snapshotDate } from './src/passages.mjs';
 import { generateChecklist, ProviderError } from './src/model.mjs';
+import { answerQuestion, boundaryResolverId, buildBoundaryChecklist, validateQuestion } from './src/questions.mjs';
 
 const publicDirectory = resolve(fileURLToPath(new URL('./public/', import.meta.url)));
 const contentTypes = {
@@ -92,7 +93,21 @@ export function createServer({ env = process.env, fetchImpl = fetch } = {}) {
           return sendJson(response, 400, { error: 'Hãy rà soát thông tin quán trước khi tạo checklist.' });
         }
         const facts = validateFacts(body.facts);
+        const question = validateQuestion(body.question);
         const evidence = selectEvidence(facts, passages);
+        if (question) {
+          const supported = isSupportedScenario(facts);
+          return sendJson(response, 200, {
+            question,
+            questionAnswer: answerQuestion(question, evidence, facts),
+            checklist: supported ? buildBoundaryChecklist(evidence, facts) : null,
+            model: boundaryResolverId,
+            modelIdentity: boundaryResolverId,
+            facts,
+            evidence,
+            snapshotDate,
+          });
+        }
         if (!isSupportedScenario(facts)) {
           return sendJson(response, 422, {
             code: 'scenario_out_of_scope',
