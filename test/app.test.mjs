@@ -107,9 +107,8 @@ test('unknown registration withholds the office and keeps cited preparation task
     assert.ok(body.checklist.exceptionAssessment);
     assert.ok(body.checklist.tasks.length > 0);
     assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
-    const unresolvedText = body.checklist.unresolved.map((claim) => claim.text).join(' ');
-    assert.match(unresolvedText, /chưa thể nêu cơ quan tiếp nhận/i);
     const registrationGuidance = body.checklist.unresolved.find((claim) => /chưa thể nêu cơ quan tiếp nhận/i.test(claim.text));
+    assert.ok(registrationGuidance, 'missing registration guidance');
     assert.match(registrationGuidance.text, /Giấy chứng nhận đầu tư/);
     assert.match(registrationGuidance.text, /liên hợp tác xã/);
     assert.ok(registrationGuidance.citations.some((citation) => citation.id === 'dn-faq-24680-household-certificate-authority'));
