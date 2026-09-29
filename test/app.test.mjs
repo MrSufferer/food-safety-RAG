@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createServer } from '../server.mjs';
+import { passages } from '../src/passages.mjs';
 
 const issue16Review = JSON.parse(await readFile(new URL('../evaluation/issue-16-scenario-review.json', import.meta.url), 'utf8'));
 
@@ -272,6 +273,50 @@ test('saves and returns reviewed filing and PCCC boundary scenarios without call
     }
   });
   assert.equal(providerCalled, false);
+});
+
+test('surfaces conflicting claims carried through selected evidence to the question API', async () => {
+  const fixture = issue16Review.conflictDetectionFixture;
+  const procedureIndex = passages.findIndex((passage) => passage.id === 'dn-procedure-1-013855-h17');
+  const syntheticPassages = fixture.syntheticPassages.map((passage) => ({
+    ...passage,
+    claimTags: [],
+    operationTags: ['cafe', 'food_and_drink'],
+  }));
+  const corpus = [
+    ...passages.slice(0, procedureIndex + 1),
+    ...syntheticPassages,
+    ...passages.slice(procedureIndex + 1),
+  ];
+
+  await withServer({
+    env: {},
+    corpus,
+    fetchImpl: async () => { throw new Error('filing questions must not call the provider'); },
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...fixture.input, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.modelIdentity, fixture.modelIdentity);
+    assert.equal(body.snapshotDate, fixture.snapshotDate);
+    assert.deepEqual(
+      body.evidence.filter(({ id }) => id.startsWith('fixture-fee-source-')).map(({ id }) => id),
+      fixture.syntheticPassages.map(({ id }) => id),
+    );
+    assert.deepEqual(body.questionAnswer.sourceConflicts.map(({ key, status, assertions }) => ({
+      key,
+      status,
+      assertionCount: assertions.length,
+    })), [fixture.expectedOutput.sourceConflict]);
+    assert.ok(body.questionAnswer.sourceConflicts[0].assertions.every(({ source }) => source.reviewDate === fixture.snapshotDate));
+    assert.equal(body.questionAnswer.unresolvedDetails.find(({ key }) => key === 'fee').status, 'mâu thuẫn nguồn · chưa xác minh');
+    assert.ok(body.checklist.tasks.length > 0);
+  });
 });
 
 test('keeps filing answers for an unknown registration type from guessing the receiving office', async () => {

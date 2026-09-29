@@ -143,6 +143,14 @@ function appendSourceLink(parent, source, label) {
   parent.append(link);
 }
 
+function sourceDateText(source) {
+  return [
+    source.issuedDate ? `Ban hành: ${source.issuedDate}` : '',
+    source.effectiveDate ? `Hiệu lực: ${source.effectiveDate}` : 'Hiệu lực: chưa ghi nhận',
+    source.reviewDate ? `Rà soát: ${source.reviewDate}` : '',
+  ].filter(Boolean).join(' · ');
+}
+
 function renderQuestionAnswer(answer, question) {
   const section = node('section', `question-answer question-answer-${answer.kind || 'unknown'}`);
   section.setAttribute('aria-labelledby', 'question-answer-title');
@@ -161,6 +169,19 @@ function renderQuestionAnswer(answer, question) {
       heading.append(node('strong', '', detail.label));
       heading.append(node('span', 'status-pill', detail.status));
       item.append(heading, node('p', '', detail.confirmationQuestion));
+      if (detail.sourceConflict) {
+        item.append(node('p', 'question-conflict-note', detail.sourceConflict.summary));
+        const sources = node('ul', 'question-conflict-sources');
+        for (const assertion of detail.sourceConflict.assertions) {
+          const sourceItem = node('li', 'question-conflict-source');
+          sourceItem.append(node('p', '', `Nguồn ghi: ${assertion.value}`));
+          appendSourceLink(sourceItem, assertion.source, assertion.source.label || 'Mở nguồn');
+          const dates = sourceDateText(assertion.source);
+          if (dates) sourceItem.append(node('p', 'source-dates', dates));
+          sources.append(sourceItem);
+        }
+        item.append(sources);
+      }
       list.append(item);
     }
     section.append(list);
@@ -170,11 +191,7 @@ function renderQuestionAnswer(answer, question) {
   if (answer.source) {
     const source = node('div', 'question-source');
     appendSourceLink(source, answer.source);
-    const dates = [
-      answer.source.issuedDate ? `Ban hành: ${answer.source.issuedDate}` : '',
-      answer.source.effectiveDate ? `Hiệu lực: ${answer.source.effectiveDate}` : 'Hiệu lực: chưa ghi nhận',
-      answer.source.reviewDate ? `Rà soát: ${answer.source.reviewDate}` : '',
-    ].filter(Boolean).join(' · ');
+    const dates = sourceDateText(answer.source);
     if (dates) source.append(node('p', 'source-dates', dates));
     section.append(source);
   }

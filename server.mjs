@@ -79,7 +79,7 @@ async function serveStatic(request, response, pathname) {
   return true;
 }
 
-export function createServer({ env = process.env, fetchImpl = fetch } = {}) {
+export function createServer({ env = process.env, fetchImpl = fetch, corpus = passages } = {}) {
   return createHttpServer(async (request, response) => {
     const requestUrl = new URL(request.url ?? '/', 'http://localhost');
     if (requestUrl.pathname === '/api/health' && request.method === 'GET') {
@@ -94,7 +94,7 @@ export function createServer({ env = process.env, fetchImpl = fetch } = {}) {
         }
         const facts = validateFacts(body.facts);
         const question = validateQuestion(body.question);
-        const evidence = selectEvidence(facts, passages);
+        const evidence = selectEvidence(facts, corpus);
         if (question) {
           const supported = isSupportedScenario(facts);
           return sendJson(response, 200, {

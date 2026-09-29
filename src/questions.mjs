@@ -98,8 +98,39 @@ function sourceCitation(passage) {
   };
 }
 
+function findFilingSourceConflicts(evidence) {
+  // Compare only explicit, source-attributed claims; do not infer procedural values from prose.
+  const claimsByKey = new Map();
+
+  for (const passage of evidence) {
+    for (const [key, value] of Object.entries(passage.administrativeClaims ?? {})) {
+      if (!filingDetails.some((detail) => detail.key === key) || typeof value !== 'string' || !value.trim()) continue;
+      if (!claimsByKey.has(key)) claimsByKey.set(key, new Map());
+      const valueKey = normalize(value);
+      if (!claimsByKey.get(key).has(valueKey)) claimsByKey.get(key).set(valueKey, []);
+      claimsByKey.get(key).get(valueKey).push({ value: value.trim(), source: sourceCitation(passage) });
+    }
+  }
+
+  return filingDetails.flatMap(({ key, label }) => {
+    const values = claimsByKey.get(key);
+    if (!values || values.size < 2) return [];
+    const assertions = [...values.values()].flat();
+
+    return [{
+      key,
+      label,
+      status: 'source_conflict',
+      summary: `Các nguồn được chọn nêu thông tin khác nhau về ${label.toLocaleLowerCase('vi')}; chưa xác định nội dung nào đang có hiệu lực. Không gộp các thông tin này thành yêu cầu hiện hành.`,
+      assertions,
+    }];
+  });
+}
+
 function answerFilingDetails(evidence, facts) {
   const source = evidence.find((passage) => passage.claimTags?.includes('procedure-code'));
+  const sourceConflicts = findFilingSourceConflicts(evidence);
+  const conflictsByKey = new Map(sourceConflicts.map((conflict) => [conflict.key, conflict]));
   const householdAuthority = facts?.legalForm === 'household_business'
     && evidence.some((passage) => passage.claimTags?.includes('household-business-authority'));
   const confirmationOffice = householdAuthority
@@ -114,12 +145,17 @@ function answerFilingDetails(evidence, facts) {
     status: 'unverified',
     title: 'Hồ sơ, lệ phí và thời hạn: chưa xác minh',
     summary: 'Bộ nguồn hiện có không xác nhận các chi tiết đang áp dụng. Danh mục thủ tục được chọn chỉ nêu tên và mã thủ tục; không nêu đủ hồ sơ, lệ phí hoặc thời hạn hiện hành.',
-    unresolvedDetails: filingDetails.map(({ key, label, question }) => ({
-      key,
-      label,
-      status: 'chưa xác minh',
-      confirmationQuestion: `Hỏi ${confirmationOffice}: “${question}”`,
-    })),
+    unresolvedDetails: filingDetails.map(({ key, label, question }) => {
+      const sourceConflict = conflictsByKey.get(key);
+      return {
+        key,
+        label,
+        status: sourceConflict ? 'mâu thuẫn nguồn · chưa xác minh' : 'chưa xác minh',
+        confirmationQuestion: `Hỏi ${confirmationOffice}: “${question}”`,
+        ...(sourceConflict ? { sourceConflict } : {}),
+      };
+    }),
+    ...(sourceConflicts.length ? { sourceConflicts } : {}),
     sourceNote: source
       ? `Nguồn được chọn ban hành ngày ${sourceDate}, ngày hiệu lực: ${effectiveDateLabel}. Nguồn này được rà soát ngày ${source.reviewDate}; ngày rà soát không thay thế ngày hiệu lực. Vì thiếu xác nhận hiện hành, không dùng riêng nguồn này hoặc gộp với tài liệu mâu thuẫn/chưa rõ hiệu lực để kết luận yêu cầu hiện tại.`
       : 'Không có nguồn thủ tục phù hợp trong các đoạn đã chọn. Vì vậy thành phần hồ sơ, lệ phí và thời hạn hiện hành đều chưa xác minh; không suy đoán hoặc ghép nguồn chưa rõ hiệu lực thành yêu cầu.',

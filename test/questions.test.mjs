@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { selectEvidence } from '../src/evidence.mjs';
 import { passages, snapshotDate } from '../src/passages.mjs';
 import { answerQuestion, buildBoundaryChecklist, classifyQuestion, validateQuestion } from '../src/questions.mjs';
@@ -14,6 +15,7 @@ const householdCafe = {
 };
 
 const evidence = selectEvidence(householdCafe, passages);
+const issue16Review = JSON.parse(await readFile(new URL('../evaluation/issue-16-scenario-review.json', import.meta.url), 'utf8'));
 
 test('classifies current filing details in Vietnamese with or without diacritics', () => {
   assert.equal(classifyQuestion('Hồ sơ, lệ phí và thời hạn hiện nay là gì?'), 'filing_details');
@@ -49,6 +51,32 @@ test('answers current filing details as unresolved and asks the commune to confi
   assert.equal(answer.source.reviewDate, snapshotDate);
   assert.match(answer.sourceNote, /ngày hiệu lực: chưa ghi nhận/);
   assert.match(answer.sourceNote, /hoặc gộp với tài liệu mâu thuẫn/);
+});
+
+test('surfaces conflicting source assertions without choosing or combining a current fee', () => {
+  const fixture = issue16Review.conflictDetectionFixture;
+  const procedure = evidence.find((passage) => passage.claimTags?.includes('procedure-code'));
+  assert.equal(fixture.modelIdentity, 'local:question-boundary-v1');
+  assert.equal(fixture.snapshotDate, snapshotDate);
+  assert.ok(fixture.syntheticPassages.every(({ reviewDate }) => reviewDate === fixture.snapshotDate));
+  const answer = answerQuestion(
+    fixture.input.question,
+    [procedure, ...fixture.syntheticPassages],
+    fixture.input.facts,
+  );
+
+  assert.equal(answer.status, fixture.expectedOutput.status);
+  assert.equal(answer.sourceConflicts.length, 1);
+  assert.equal(answer.sourceConflicts[0].key, fixture.expectedOutput.sourceConflict.key);
+  assert.equal(answer.sourceConflicts[0].status, fixture.expectedOutput.sourceConflict.status);
+  assert.equal(answer.sourceConflicts[0].assertions.length, fixture.expectedOutput.sourceConflict.assertionCount);
+  assert.match(answer.sourceConflicts[0].summary, /thông tin khác nhau/);
+  assert.ok(answer.sourceConflicts[0].assertions.some(({ value }) => value === 'SYNTHETIC FIXTURE VALUE A'));
+  assert.ok(answer.sourceConflicts[0].assertions.some(({ value }) => value === 'SYNTHETIC FIXTURE VALUE B'));
+  assert.deepEqual(
+    Object.fromEntries(answer.unresolvedDetails.map(({ key, status }) => [key, status])),
+    fixture.expectedOutput.unresolvedDetailStatuses,
+  );
 });
 
 test('answers fire-safety questions with the corpus boundary and an official confirmation route', () => {

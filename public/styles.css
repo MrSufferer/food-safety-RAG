@@ -160,6 +160,9 @@ h1 { max-width: 720px; margin-bottom: 15px; font-size: clamp(37px, 5.4vw, 60px);
 .question-detail-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .question-detail-heading strong { font-size: 12px; }
 .question-detail p { margin: 5px 0 0; font-size: 11px; }
+.question-detail .question-conflict-note { font-weight: 650; }
+.question-conflict-sources { display: grid; gap: 5px; margin: 7px 0 0; padding-left: 17px; }
+.question-conflict-source a { display: inline-block; margin-top: 4px; font-size: 10px; }
 .status-pill { min-height: 24px; display: inline-flex; align-items: center; border: 1px solid var(--notice-line); border-radius: 2px; padding: 2px 7px; font-size: 10px; font-weight: 700; }
 .question-source-note { margin: 13px 0 0; color: var(--muted); font-size: 11px; }
 .question-source, .question-route { display: grid; justify-items: start; gap: 2px; margin-top: 10px; }

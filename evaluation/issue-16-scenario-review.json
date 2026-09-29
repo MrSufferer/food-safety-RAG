@@ -469,5 +469,61 @@
         }
       }
     }
-  ]
+  ],
+  "conflictDetectionFixture": {
+    "recordType": "synthetic conflict detection regression",
+    "reviewerNotes": "The two fee assertions below are fictional test values from example.invalid, not official evidence or claims about Vietnamese requirements. The resolver must expose the disagreement, retain an unverified status, and ask the authority to confirm; it must not select or combine either value.",
+    "modelIdentity": "local:question-boundary-v1",
+    "snapshotDate": "2026-09-29",
+    "input": {
+      "facts": {
+        "businessType": "cafe",
+        "legalForm": "household_business",
+        "preparation": "food_and_drink",
+        "operationMode": "prepared_at_fixed_shop",
+        "smallExemptionClaim": "no",
+        "location": "Da Nang"
+      },
+      "question": "Lệ phí hiện hành là bao nhiêu?"
+    },
+    "syntheticPassages": [
+      {
+        "id": "fixture-fee-source-a",
+        "document": "Synthetic conflict test source A (not official)",
+        "section": "Test-only fee assertion",
+        "url": "https://example.invalid/fee-a",
+        "issuedDate": "2025-01-01",
+        "effectiveDate": null,
+        "reviewDate": "2026-09-29",
+        "administrativeClaims": {
+          "fee": "SYNTHETIC FIXTURE VALUE A"
+        }
+      },
+      {
+        "id": "fixture-fee-source-b",
+        "document": "Synthetic conflict test source B (not official)",
+        "section": "Test-only fee assertion",
+        "url": "https://example.invalid/fee-b",
+        "issuedDate": "2025-02-01",
+        "effectiveDate": null,
+        "reviewDate": "2026-09-29",
+        "administrativeClaims": {
+          "fee": "SYNTHETIC FIXTURE VALUE B"
+        }
+      }
+    ],
+    "expectedOutput": {
+      "status": "unverified",
+      "sourceConflict": {
+        "key": "fee",
+        "status": "source_conflict",
+        "assertionCount": 2
+      },
+      "unresolvedDetailStatuses": {
+        "dossier": "chưa xác minh",
+        "fee": "mâu thuẫn nguồn · chưa xác minh",
+        "processing_time": "chưa xác minh"
+      }
+    }
+  }
 }
