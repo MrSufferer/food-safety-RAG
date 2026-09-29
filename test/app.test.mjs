@@ -196,6 +196,39 @@ test('uses the free Gemini model when the preferred model is rate-limited', asyn
   ]);
 });
 
+test('returns a cited local checklist when both Gemini models are rate-limited', async () => {
+  const requestedModels = [];
+  const facts = { ...householdCafe, smallExemptionClaim: 'yes' };
+  await withServer({
+    env: { GEMINI_API_KEY: 'gemini-test-key' },
+    fetchImpl: async (url) => {
+      requestedModels.push(url);
+      return { ok: false, status: 429 };
+    },
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.model, 'local:rate-limit-fallback-v1');
+    assert.match(body.generationNotice, /giới hạn|quá tải/i);
+    assert.equal(body.checklist.tasks.length, 4);
+    assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
+    assert.ok(body.checklist.route.citations.some((citation) => citation.id === 'dn-faq-24680-household-certificate-authority'));
+    assert.ok(body.checklist.exceptionAssessment.citations.some((citation) => citation.id === 'vn-decree-15-2018-articles-11-12'));
+    assert.ok(body.evidence.length > 0);
+    assert.equal(body.error, undefined);
+  });
+
+  assert.deepEqual(requestedModels, [
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent',
+  ]);
+});
+
 test('tries the free Gemini model and then OpenRouter when the preferred Gemini model fails', async () => {
   const requested = [];
   await withServer({

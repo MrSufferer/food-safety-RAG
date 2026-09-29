@@ -59,6 +59,18 @@ function parseChecklist(content, facts, evidence, model, generationNotice) {
   return { checklist, evidenceGaps, model, ...(generationNotice ? { generationNotice } : {}), snapshotDate };
 }
 
+function buildRateLimitFallback(facts, evidence) {
+  const { checklist: boundaryChecklist, evidenceGaps } = buildBoundaryChecklist(evidence, facts);
+  const checklist = assertUsefulChecklist(applyOwnerFactGuidance(boundaryChecklist, facts, evidence));
+  return {
+    checklist,
+    evidenceGaps,
+    model: RATE_LIMIT_FALLBACK_MODEL,
+    generationNotice: RATE_LIMIT_FALLBACK_NOTICE,
+    snapshotDate,
+  };
+}
+
 async function readJsonResponse(response, providerName) {
   try {
     return await response.json();
@@ -85,7 +97,11 @@ async function requestGemini({ facts, evidence, apiKey, model, fetchImpl }) {
   } catch {
     throw new Error(`Could not connect to Gemini model ${model}`);
   }
-  if (!response.ok) throw new Error(`Gemini model ${model} returned HTTP ${response.status}`);
+  if (!response.ok) {
+    const error = new Error(`Gemini model ${model} returned HTTP ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
 
   const payload = await readJsonResponse(response, 'Gemini');
   const parts = payload?.candidates?.[0]?.content?.parts;
@@ -127,15 +143,7 @@ async function requestOpenRouter({ facts, evidence, apiKey, model, fetchImpl }) 
 
   if (!response.ok) {
     if (response.status === 429) {
-      const { checklist: boundaryChecklist, evidenceGaps } = buildBoundaryChecklist(evidence, facts);
-      const checklist = assertUsefulChecklist(applyOwnerFactGuidance(boundaryChecklist, facts, evidence));
-      return {
-        checklist,
-        evidenceGaps,
-        model: RATE_LIMIT_FALLBACK_MODEL,
-        generationNotice: RATE_LIMIT_FALLBACK_NOTICE,
-        snapshotDate,
-      };
+      return buildRateLimitFallback(facts, evidence);
     }
     throw new ProviderError(`Dịch vụ tạo câu trả lời trả về lỗi (${response.status}). Các đoạn nguồn đã chọn được giữ bên dưới.`, evidence);
   }
@@ -162,18 +170,21 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
     const preferredModel = env.GEMINI_MODEL?.trim() || GEMINI_DEFAULT_MODEL;
     const freeModel = env.GEMINI_FREE_MODEL?.trim() || GEMINI_FREE_FALLBACK_MODEL;
     const geminiModels = [...new Set([preferredModel, freeModel])];
+    let geminiModelsRateLimited = true;
 
     for (const [index, model] of geminiModels.entries()) {
       try {
         const result = await requestGemini({ facts, evidence, apiKey: geminiApiKey, model, fetchImpl });
         const notice = index > 0 ? GEMINI_FALLBACK_NOTICE : undefined;
         return parseChecklist(result.content, facts, evidence, result.model, notice);
-      } catch {
+      } catch (error) {
+        if (error?.status !== 429) geminiModelsRateLimited = false;
         continue;
       }
     }
 
     if (!openRouterApiKey) {
+      if (geminiModelsRateLimited) return buildRateLimitFallback(facts, evidence);
       throw new ProviderError('Gemini chưa tạo được checklist. Hãy cấu hình OPENROUTER_API_KEY để bật mô hình dự phòng; các đoạn nguồn đã chọn được giữ bên dưới.', evidence);
     }
   }
