@@ -18,21 +18,19 @@ Copy the run details from the result and expanded source panel before the observ
 - Unresolved point the participant names:
 - Official next action shown:
 
-### Automated model run
+### Production and model review
 
-This verifies the configured model and citation path only. It is not the required uncoached owner observation.
+These are automated checks only. They are not an uncoached owner observation.
 
-- Run date: 2026-09-29
-- Model ID: `nvidia/nemotron-3-super-120b-a12b:free`
-- Snapshot review date: 2026-09-29
-- Owner facts: café; household-business registration; prepares food and drinks; Đà Nẵng
+- Run date and snapshot review date: 2026-09-29
+- Owner facts: café; confirmed household-business registration; prepares food and drinks at a fixed shop; Đà Nẵng
 - Selected passage IDs: `dn-faq-24680-household-certificate-authority`, `dn-procedure-1-013855-h17`, `vn-decree-15-2018-articles-11-12`, `vn-law-55-2010-article-29-separate-utensils`, `vn-law-55-2010-article-29-safe-utensils`
-- Conditional route: ask UBND cấp xã about the food-safety certificate route for the confirmed household-business registration
-- Preparation tasks returned: separate utensils and containers for raw and cooked food; use hygienic cooking tools; use safe, washed, dry eating utensils
-- Unresolved points: current dossier, fee, and processing time
-- Official next action: confirm the current dossier, fee, and processing time with UBND cấp xã
-- Outcome: HTTP 200; claims passed citation validation
-- Human observation: not performed; waived as an acceptance criterion
+- Configured production model: `google/gemma-4-31b-it:free`
+- Production checklist request: HTTP 502 because the upstream provider returned HTTP 429. Retrieved passages remained available in the response. No generated checklist was shown.
+- Alternate model review: `google/gemma-4-26b-a4b-it:free` also returned HTTP 429. `nvidia/nemotron-3-super-120b-a12b:free` returned a claim asking the owner to confirm the already-confirmed registration, so that response failed content review. `dots-studio/dots-3-note-preview:free` returned mixed Chinese and Vietnamese text and repeated the registration contradiction, so it also failed content review. No alternate model was configured for production.
+- Production cited-answer request: HTTP 200 through the Vercel `/api/checklist` route using `local:question-boundary-v1`. The response included a citation-backed conditional commune route, three cited preparation tasks, and a source-linked answer marking current dossier, fee, and processing time as “chưa xác minh”.
+- Model-generated checklist acceptance: still unverified in production because the configured upstream returned 429 and the reviewed alternatives failed content review.
+- Human observation: not performed; waived as an acceptance criterion. No participant-usefulness claim is made.
 
 ## Issue 15 scenario review
 
