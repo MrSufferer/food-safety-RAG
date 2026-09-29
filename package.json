@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server.mjs",
     "test": "node --test",
-    "typecheck": "for file in server.mjs src/*.mjs public/app.js test/*.mjs; do node --check \"$file\" || exit 1; done"
+    "typecheck": "for file in server.mjs src/*.mjs public/*.js test/*.mjs; do node --check \"$file\" || exit 1; done"
   },
   "engines": {
     "node": ">=22.9"

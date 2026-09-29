@@ -3,8 +3,30 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createServer } from '../server.mjs';
 import { passages } from '../src/passages.mjs';
+import { renderEvidence, renderEvidenceGaps, renderProviderFailure } from '../public/evidence-view.js';
 
 const issue16Review = JSON.parse(await readFile(new URL('../evaluation/issue-16-scenario-review.json', import.meta.url), 'utf8'));
+
+class TestElement {
+  constructor(tagName) {
+    this.tagName = tagName;
+    this.children = [];
+    this.attributes = {};
+    this.textContent = '';
+  }
+
+  append(...children) {
+    this.children.push(...children);
+  }
+
+  setAttribute(name, value) {
+    this.attributes[name] = value;
+  }
+}
+
+function testDocument() {
+  return { createElement: (tagName) => new TestElement(tagName) };
+}
 
 const householdCafe = {
   businessType: 'cafe',
@@ -211,23 +233,86 @@ test('provider failure displays selected source passages and no generated checkl
   });
 });
 
-test('withholds a claim if its generated citation is topically unrelated to the claim', async () => {
-  const invalidOutput = validOutput();
-  invalidOutput.route.passageIds = ['vn-law-55-2010-article-29-safe-utensils'];
+test('provider failure expands selected evidence while ordinary evidence stays collapsed', () => {
+  const parent = new TestElement('main');
+  const evidence = [{
+    document: 'Luật An toàn thực phẩm',
+    section: 'Điều 29',
+    excerpt: 'Dụng cụ riêng cho thực phẩm sống và chín.',
+    id: 'vn-law-55-2010-article-29-separate-utensils',
+    claimTags: ['separate-raw-cooked-utensils'],
+    version: '55/2010/QH12',
+    issuedDate: '2010-06-17',
+    effectiveDate: '2011-07-01',
+    reviewDate: '2026-09-29',
+    useLimits: 'Không xác nhận hồ sơ hiện hành.',
+    url: 'https://example.gov.vn/law',
+  }];
+
+  renderProviderFailure({ error: 'Dịch vụ tạo câu trả lời đang lỗi.', evidence }, {
+    document: testDocument(),
+    parent,
+  });
+
+  const [error, evidenceDisclosure] = parent.children;
+  assert.equal(error.className, 'error-box');
+  assert.equal(error.attributes.role, 'alert');
+  assert.equal(error.children[1].textContent, 'Dịch vụ tạo câu trả lời đang lỗi.');
+  assert.equal(evidenceDisclosure.open, true);
+  const [passage] = evidenceDisclosure.children.slice(1);
+  assert.equal(passage.open, true);
+  assert.equal(passage.children[1].children[0].textContent, evidence[0].excerpt);
+
+  const ordinaryParent = new TestElement('main');
+  renderEvidence(evidence, { document: testDocument(), parent: ordinaryParent });
+  assert.equal(ordinaryParent.children[0].open, false);
+  assert.equal(ordinaryParent.children[0].children[1].open, false);
+});
+
+test('keeps supported checklist items and explains sections omitted for weak evidence', async () => {
+  const partialOutput = validOutput();
+  partialOutput.route.passageIds = ['vn-law-55-2010-article-29-safe-utensils'];
+  partialOutput.tasks.push({
+    text: 'Nộp ngay mẫu đơn hiện hành.',
+    passageIds: ['missing-or-unrelated-source'],
+  });
+  partialOutput.unresolved = [];
+  partialOutput.nextAction = null;
   await withServer({
     env: { OPENROUTER_API_KEY: 'test-key' },
-    fetchImpl: async () => fakeProviderResponse(invalidOutput),
+    fetchImpl: async () => fakeProviderResponse(partialOutput),
   }, async (origin) => {
     const response = await fetch(`${origin}/api/checklist`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ facts: householdCafe, reviewed: true }),
     });
     const body = await response.json();
-    assert.equal(response.status, 502);
-    assert.match(body.error, /thiếu căn cứ/);
-    assert.equal(body.checklist, undefined);
-    assert.ok(body.evidence.length > 0);
+    assert.equal(response.status, 200);
+    assert.equal(body.checklist.route, null);
+    assert.equal(body.checklist.tasks.length, 1);
+    assert.equal(body.checklist.tasks[0].text, validOutput().tasks[0].text);
+    assert.ok(body.checklist.tasks[0].citations.length > 0);
+    assert.deepEqual(body.evidenceGaps.map(({ section }) => section), ['route', 'tasks', 'unresolved', 'nextAction']);
+    assert.match(body.evidenceGaps.find(({ section }) => section === 'unresolved').message, /hồ sơ, lệ phí hoặc thời hạn/);
   });
+});
+
+test('renders evidence gaps with section labels and plain-language explanations', () => {
+  const parent = new TestElement('main');
+  renderEvidenceGaps([{
+    section: 'route',
+    label: 'Hướng cơ quan',
+    issue: 'unsupported',
+    message: 'Đoạn nguồn được chọn không xác nhận cơ quan nêu trong nhận định.',
+  }], { document: testDocument(), parent });
+
+  const [section] = parent.children;
+  assert.equal(section.className, 'result-section evidence-gaps');
+  assert.equal(section.attributes.role, 'status');
+  assert.equal(section.children[0].textContent, 'Một số phần chưa đủ căn cứ');
+  const [item] = section.children[1].children;
+  assert.equal(item.children[0].textContent, 'Hướng cơ quan: ');
+  assert.match(item.children[1].textContent, /không xác nhận cơ quan/);
 });
 
 test('keeps unsupported registration routes out of the model request', async () => {
@@ -267,6 +352,7 @@ test('saves and returns reviewed filing and PCCC boundary scenarios without call
       assert.equal(body.snapshotDate, scenario.snapshotDate);
       assert.deepEqual(body.questionAnswer, scenario.output.questionAnswer);
       assert.deepEqual(body.checklist, scenario.output.checklist);
+      assert.deepEqual(body.evidenceGaps, []);
       assert.deepEqual(body.evidence.map(({ id, issuedDate, effectiveDate, reviewDate }) => ({ id, issuedDate, effectiveDate, reviewDate })), scenario.selectedPassages);
       assert.ok(body.checklist.tasks.length > 0);
       assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));

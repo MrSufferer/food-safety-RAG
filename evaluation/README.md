@@ -1,8 +1,8 @@
-# Newcomer observation
+# Optional newcomer observation
 
-Status: **pending a real, uncoached observation**.
+Status: **waived as an acceptance criterion by maintainer direction on 2026-09-29**. This record can still be used for future product learning; no human participant result is claimed.
 
-Use this record when a first-time Vietnamese-speaking café or takeaway owner in Đà Nẵng tries the demo. Do not coach the participant through the flow. Record what they do and say in their own words.
+If a first-time Vietnamese-speaking café or takeaway owner in Đà Nẵng tries the demo, use this record without coaching them through the flow. Record what they do and say in their own words.
 
 ## Registered household-café run
 
@@ -32,7 +32,7 @@ This verifies the configured model and citation path only. It is not the require
 - Unresolved points: current dossier, fee, and processing time
 - Official next action: confirm the current dossier, fee, and processing time with UBND cấp xã
 - Outcome: HTTP 200; claims passed citation validation
-- Human observation: pending
+- Human observation: not performed; waived as an acceptance criterion
 
 ## Issue 15 scenario review
 

@@ -95,8 +95,9 @@ test('answers fire-safety questions with the corpus boundary and an official con
 });
 
 test('keeps supported food-preparation tasks cited beside each claim in boundary answers', () => {
-  const checklist = buildBoundaryChecklist(evidence, householdCafe);
+  const { checklist, evidenceGaps } = buildBoundaryChecklist(evidence, householdCafe);
 
+  assert.deepEqual(evidenceGaps, []);
   assert.equal(checklist.tasks.length, 3);
   assert.ok(checklist.tasks.every((task) => task.citations.length === 1));
   assert.ok(checklist.tasks.some((task) => task.passageIds.includes('vn-law-55-2010-article-29-separate-utensils')));
@@ -110,7 +111,7 @@ test('does not guess the filing office when the registration type is unknown', (
   const facts = { ...householdCafe, legalForm: 'unknown' };
   const selected = selectEvidence(facts, passages);
   const answer = answerQuestion('Hồ sơ, lệ phí và thời hạn hiện hành là gì?', selected, facts);
-  const checklist = buildBoundaryChecklist(selected, facts);
+  const { checklist } = buildBoundaryChecklist(selected, facts);
 
   assert.ok(answer.unresolvedDetails.every((detail) => !detail.confirmationQuestion.includes('UBND cấp xã')));
   assert.equal(checklist.route, null);

@@ -182,6 +182,11 @@ h1 { max-width: 720px; margin-bottom: 15px; font-size: clamp(37px, 5.4vw, 60px);
 .unresolved { margin-top: 18px; padding: 15px 17px; border-left: 3px solid var(--notice-line); background: var(--notice); color: var(--notice-ink); }
 .unresolved h3 { margin: 0 0 5px; font-size: 13px; }
 .unresolved p { margin: 0; font-size: 12px; }
+.evidence-gaps { padding: 14px 16px; border-left: 3px solid var(--notice-line); background: var(--notice); color: var(--notice-ink); }
+.evidence-gaps h3 { margin: 0 0 8px; font-size: 13px; }
+.evidence-gap-list { display: grid; gap: 8px; margin: 0; padding-left: 19px; }
+.evidence-gap { padding-left: 2px; font-size: 12px; line-height: 1.55; }
+.evidence-gap strong { font-weight: 700; }
 .next-action { margin-top: 18px; padding: 17px; background: var(--surface-soft); border: 1px solid var(--next-line); }
 .next-action .eyebrow { margin-bottom: 6px; }
 .next-action .claim { margin: 0; padding: 0; border: 0; background: transparent; }

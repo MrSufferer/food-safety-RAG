@@ -242,6 +242,10 @@ export function buildBoundaryChecklist(evidence, facts) {
     } : null,
   };
 
-  const checklist = sanitizeChecklist(input, evidence);
-  return assertUsefulChecklist(checklist, { requireRoute: knownHouseholdBusiness });
+  const sanitized = sanitizeChecklist(input, evidence, { expectRoute: knownHouseholdBusiness });
+  const { evidenceGaps, ...checklist } = sanitized;
+  return {
+    checklist: assertUsefulChecklist(checklist),
+    evidenceGaps,
+  };
 }
