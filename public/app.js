@@ -1,4 +1,4 @@
-import { renderEvidence, renderProviderFailure } from './evidence-view.js';
+import { renderEvidence, renderEvidenceGaps, renderProviderFailure } from './evidence-view.js';
 
 const labels = {
   legalForm: {
@@ -248,10 +248,13 @@ function showResponse(data, factsFromRequest) {
   const checklist = data.checklist;
   if (!checklist) {
     if (!data.questionAnswer) resultContent.append(node('div', 'error-box', 'Không có checklist để hiển thị.'));
+    renderEvidenceGaps(data.evidenceGaps, { document, parent: resultContent });
     renderEvidence(data.evidence, { document, parent: resultContent });
     result.classList.add('is-ready');
     return;
   }
+
+  renderEvidenceGaps(data.evidenceGaps, { document, parent: resultContent });
 
   if (checklist.route) {
     const routeHeading = node('section', 'result-section');
@@ -262,20 +265,24 @@ function showResponse(data, factsFromRequest) {
 
   const tasksSection = node('section', 'result-section');
   tasksSection.append(node('h3', '', 'Việc bạn có thể rà soát'));
-  const taskList = node('ul', 'prep-list');
-  checklist.tasks.forEach((task, index) => {
-    const item = node('li', 'prep-item');
-    const check = document.createElement('input');
-    check.type = 'checkbox';
-    check.id = `prep-${index}`;
-    check.setAttribute('aria-label', `Đánh dấu đã đọc hoặc chuẩn bị: ${task.text}`);
-    const copy = document.createElement('div');
-    copy.append(node('p', '', task.text));
-    appendCitations(copy, task.citations);
-    item.append(check, copy);
-    taskList.append(item);
-  });
-  tasksSection.append(taskList);
+  if (checklist.tasks.length === 0) {
+    tasksSection.append(node('p', 'help-text', 'Chưa có việc chuẩn bị nào đủ căn cứ để hiển thị.'));
+  } else {
+    const taskList = node('ul', 'prep-list');
+    checklist.tasks.forEach((task, index) => {
+      const item = node('li', 'prep-item');
+      const check = document.createElement('input');
+      check.type = 'checkbox';
+      check.id = `prep-${index}`;
+      check.setAttribute('aria-label', `Đánh dấu đã đọc hoặc chuẩn bị: ${task.text}`);
+      const copy = document.createElement('div');
+      copy.append(node('p', '', task.text));
+      appendCitations(copy, task.citations);
+      item.append(check, copy);
+      taskList.append(item);
+    });
+    tasksSection.append(taskList);
+  }
   tasksSection.append(node('p', 'check-note', 'Dấu tick chỉ ghi nhận việc bạn đã đọc hoặc tự chuẩn bị. Dấu tick không xác nhận tuân thủ, đủ điều kiện hay sẵn sàng nộp hồ sơ.'));
   resultContent.append(tasksSection);
 

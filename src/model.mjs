@@ -12,10 +12,11 @@ Mọi câu nói về thẩm quyền, điều kiện, hoặc việc chuẩn bị 
 const CITATION_GUIDANCE = `Ánh xạ nguồn: route dùng dn-faq-24680-household-certificate-authority và chỉ khi đã xác nhận giấy đăng ký hộ kinh doanh; tasks dùng các passage về dụng cụ trong Luật 55 phù hợp với hoạt động; unresolved về hồ sơ, lệ phí và thời hạn dùng dn-procedure-1-013855-h17, không kèm FAQ vì FAQ chỉ nói về thẩm quyền. Để đánh giá ngoại lệ, dùng vn-decree-15-2018-articles-11-12; nêu đúng dữ kiện đăng ký và hoạt động do chủ quán cung cấp. Với legalForm=unknown, route phải null, unresolved phải xác định giấy đăng ký còn thiếu, còn tasks vẫn phải có căn cứ. Không tự ghép nguồn không hỗ trợ vào cùng một claim.`;
 
 export class ProviderError extends Error {
-  constructor(message, evidence) {
+  constructor(message, evidence, evidenceGaps = []) {
     super(message);
     this.name = 'ProviderError';
     this.evidence = evidence;
+    this.evidenceGaps = evidenceGaps;
   }
 }
 
@@ -67,12 +68,20 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
     throw new ProviderError('Dịch vụ trả về nội dung không theo cấu trúc yêu cầu. Không tạo checklist chưa kiểm chứng.', evidence);
   }
 
-  const checklist = applyOwnerFactGuidance(sanitizeChecklist(parsed, evidence), facts, evidence);
+  const sanitized = sanitizeChecklist(parsed, evidence, { expectRoute: facts.legalForm !== 'unknown' });
+  const { evidenceGaps: initialEvidenceGaps, ...safeChecklist } = sanitized;
+  const checklist = applyOwnerFactGuidance(safeChecklist, facts, evidence);
+  const evidenceGaps = initialEvidenceGaps.filter((gap) => {
+    if (gap.section === 'route' && checklist.route) return false;
+    if (gap.section === 'tasks' && gap.issue === 'missing' && checklist.tasks.length > 0) return false;
+    if (gap.section === 'nextAction' && checklist.nextAction) return false;
+    return true;
+  });
   try {
-    assertUsefulChecklist(checklist, { requireRoute: facts.legalForm !== 'unknown' });
+    assertUsefulChecklist(checklist);
   } catch {
-    throw new ProviderError('Câu trả lời thiếu căn cứ hoặc thiếu bước hành động. Không hiển thị các nhận định đó.', evidence);
+    throw new ProviderError('Câu trả lời không có mục nào đủ căn cứ để hiển thị. Hãy kiểm tra các đoạn nguồn và xác nhận trực tiếp với cơ quan có thẩm quyền.', evidence, evidenceGaps);
   }
 
-  return { checklist, model: payload.model || model, snapshotDate };
+  return { checklist, evidenceGaps, model: payload.model || model, snapshotDate };
 }

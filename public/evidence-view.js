@@ -59,11 +59,28 @@ export function renderEvidence(evidence = [], { document, parent, expanded = fal
   parent.append(details);
 }
 
+export function renderEvidenceGaps(evidenceGaps = [], { document, parent }) {
+  if (!Array.isArray(evidenceGaps) || evidenceGaps.length === 0) return;
+  const section = node(document, 'section', 'result-section evidence-gaps');
+  section.setAttribute('role', 'status');
+  section.append(node(document, 'h3', '', 'Một số phần chưa đủ căn cứ'));
+  const list = node(document, 'ul', 'evidence-gap-list');
+  for (const gap of evidenceGaps) {
+    const item = node(document, 'li', 'evidence-gap');
+    item.append(node(document, 'strong', '', `${gap.label}: `));
+    item.append(node(document, 'span', '', gap.message));
+    list.append(item);
+  }
+  section.append(list);
+  parent.append(section);
+}
+
 export function renderProviderFailure(data, { document, parent }) {
   const error = node(document, 'div', 'error-box');
   error.setAttribute('role', 'alert');
   error.append(node(document, 'strong', '', 'Chưa tạo checklist'));
   error.append(node(document, 'p', '', data.error));
   parent.append(error);
+  renderEvidenceGaps(data.evidenceGaps, { document, parent });
   renderEvidence(data.evidence, { document, parent, expanded: true });
 }

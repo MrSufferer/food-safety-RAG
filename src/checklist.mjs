@@ -26,7 +26,33 @@ function validClaim(claim, evidence, supportedTags) {
   };
 }
 
-export function sanitizeChecklist(input, evidence) {
+function evidenceGap(section, issue) {
+  const copy = {
+    route: {
+      label: 'Hướng cơ quan',
+      missing: 'Chưa có đoạn nguồn được chọn xác nhận cơ quan hoặc thủ tục áp dụng, nên chưa nêu lộ trình.',
+      unsupported: 'Đoạn nguồn được chọn không xác nhận cơ quan hoặc thủ tục nêu trong nhận định, nên lộ trình đã được lược bỏ.',
+    },
+    tasks: {
+      label: 'Việc chuẩn bị',
+      missing: 'Chưa có đoạn nguồn phù hợp để nêu việc chuẩn bị có căn cứ.',
+      unsupported: 'Đoạn nguồn được chọn không xác nhận một số việc chuẩn bị, nên các việc đó đã được lược bỏ.',
+    },
+    unresolved: {
+      label: 'Điểm chưa xác minh',
+      missing: 'Nguồn hiện có chưa xác nhận thành phần hồ sơ, lệ phí hoặc thời hạn hiện hành. Hãy coi các chi tiết này là “chưa xác minh”.',
+      unsupported: 'Đoạn nguồn được chọn không đủ căn cứ cho một số điểm chưa xác minh; thành phần hồ sơ, lệ phí và thời hạn hiện hành vẫn “chưa xác minh”.',
+    },
+    nextAction: {
+      label: 'Bước tiếp theo',
+      missing: 'Chưa có đoạn nguồn phù hợp để đưa ra bước tiếp theo; hãy hỏi cơ quan có thẩm quyền để xác nhận.',
+      unsupported: 'Đoạn nguồn được chọn không hỗ trợ bước tiếp theo đã nêu, nên bước đó đã được lược bỏ. Hãy hỏi cơ quan có thẩm quyền để xác nhận.',
+    },
+  }[section];
+  return { section, label: copy.label, issue, message: copy[issue] };
+}
+
+export function sanitizeChecklist(input, evidence, { expectRoute = true } = {}) {
   const route = validClaim(input?.route, evidence, new Set(['household-business-authority', 'conditional-route']));
   const nextAction = validClaim(input?.nextAction, evidence, new Set([
     'household-business-authority',
@@ -38,16 +64,18 @@ export function sanitizeChecklist(input, evidence) {
     'exception-criteria',
     'no-size-only-exemption',
   ]));
-  const tasks = (Array.isArray(input?.tasks) ? input.tasks : [])
+  const taskCandidates = Array.isArray(input?.tasks) ? input.tasks : [];
+  const validTasks = taskCandidates
     .map((claim) => validClaim(claim, evidence, new Set([
       'separate-raw-cooked-utensils',
       'safe-cooking-utensils',
       'clean-dry-serving-utensils',
       'conditions-for-exception',
     ])))
-    .filter(Boolean)
-    .slice(0, 4);
-  const unresolved = (Array.isArray(input?.unresolved) ? input.unresolved : [])
+    .filter(Boolean);
+  const tasks = validTasks.slice(0, 4);
+  const unresolvedCandidates = Array.isArray(input?.unresolved) ? input.unresolved : [];
+  const validUnresolved = unresolvedCandidates
     .map((claim) => validClaim(claim, evidence, new Set([
       'household-business-authority',
       'conditional-route',
@@ -57,10 +85,20 @@ export function sanitizeChecklist(input, evidence) {
       'no-size-only-exemption',
       'procedure-code',
     ])))
-    .filter(Boolean)
-    .slice(0, 5);
+    .filter(Boolean);
+  const unresolved = validUnresolved.slice(0, 5);
 
-  return { route, tasks, unresolved, nextAction };
+  const gaps = [];
+  if (expectRoute && !route) gaps.push(evidenceGap('route', input?.route ? 'unsupported' : 'missing'));
+  if (taskCandidates.length === 0 || validTasks.length < taskCandidates.length) {
+    gaps.push(evidenceGap('tasks', taskCandidates.length ? 'unsupported' : 'missing'));
+  }
+  if (unresolvedCandidates.length === 0 || validUnresolved.length < unresolvedCandidates.length) {
+    gaps.push(evidenceGap('unresolved', unresolvedCandidates.length ? 'unsupported' : 'missing'));
+  }
+  if (!nextAction) gaps.push(evidenceGap('nextAction', input?.nextAction ? 'unsupported' : 'missing'));
+
+  return { route, tasks, unresolved, nextAction, evidenceGaps: gaps };
 }
 
 function fixedClaim(text, passageIds, evidence, tags) {
@@ -143,9 +181,14 @@ export function applyOwnerFactGuidance(checklist, facts, evidence) {
   return guided;
 }
 
-export function assertUsefulChecklist(checklist, { requireRoute = true } = {}) {
-  if ((requireRoute && !checklist.route) || checklist.tasks.length < 1 || checklist.unresolved.length < 1 || !checklist.nextAction) {
-    throw new Error('Model trả về câu trả lời thiếu lộ trình, việc chuẩn bị, điểm chưa xác minh hoặc bước tiếp theo có căn cứ.');
+export function assertUsefulChecklist(checklist) {
+  const hasSupportedClaim = checklist.route
+    || checklist.tasks.length > 0
+    || checklist.unresolved.length > 0
+    || checklist.nextAction
+    || checklist.exceptionAssessment;
+  if (!hasSupportedClaim) {
+    throw new Error('Không có nhận định nào đủ căn cứ để hiển thị.');
   }
   return checklist;
 }

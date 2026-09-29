@@ -97,10 +97,13 @@ export function createServer({ env = process.env, fetchImpl = fetch, corpus = pa
         const evidence = selectEvidence(facts, corpus);
         if (question) {
           const supported = isSupportedScenario(facts);
+          const boundary = supported
+            ? buildBoundaryChecklist(evidence, facts)
+            : { checklist: null, evidenceGaps: [] };
           return sendJson(response, 200, {
             question,
             questionAnswer: answerQuestion(question, evidence, facts),
-            checklist: supported ? buildBoundaryChecklist(evidence, facts) : null,
+            ...boundary,
             model: boundaryResolverId,
             modelIdentity: boundaryResolverId,
             facts,
@@ -121,7 +124,12 @@ export function createServer({ env = process.env, fetchImpl = fetch, corpus = pa
         return sendJson(response, 200, { ...generated, facts, evidence });
       } catch (error) {
         if (error instanceof ProviderError) {
-          return sendJson(response, 502, { error: error.message, evidence: error.evidence, snapshotDate });
+          return sendJson(response, 502, {
+            error: error.message,
+            evidence: error.evidence,
+            evidenceGaps: error.evidenceGaps,
+            snapshotDate,
+          });
         }
         if (error instanceof TypeError || error instanceof SyntaxError || error instanceof RangeError) {
           return sendJson(response, error instanceof RangeError ? 413 : 400, { error: error.message });
@@ -142,7 +150,7 @@ export function createServer({ env = process.env, fetchImpl = fetch, corpus = pa
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT || 4173);
   const server = createServer();
-  server.listen(port, '127.0.0.1', () => {
-    process.stdout.write(`Mở http://127.0.0.1:${port}\n`);
+  server.listen(port, '0.0.0.0', () => {
+    process.stdout.write(`API server đang lắng nghe cổng ${port}\n`);
   });
 }
