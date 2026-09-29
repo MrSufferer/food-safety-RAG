@@ -40,6 +40,8 @@ An additional availability check used the same key on 2026-09-29. Gemini 2.5 Fla
 
 Fresh local end-to-end replay on 2026-09-29 made three more household-café requests through the current branch. All returned HTTP 200 with three cited preparation tasks and no prototype/suitability commentary; one used Gemini 3.1 Flash-Lite and two used the Gemini 3.5 Flash-Lite fallback. Render's configured `GEMINI_API_KEY` value matches the local key, and the production API health endpoint returns HTTP 200. These successful requests verify usable quota and the RAG path, but do not reveal the Google project's paid-billing status.
 
+A final local replay on 2026-09-29 sent three sequential requests through the app using the ignored `.env` file. All returned HTTP 200 with three cited tasks, citations on every checklist claim, and no prototype meta-commentary. The app selected Gemini 3.1 Flash-Lite twice and Gemini 3.5 Flash-Lite once. Only status, model ID, citation checks, and task counts were recorded; prompt and generated text were not saved. This confirms the configured fallback path still works and available quota remains usable; it does not establish paid-billing status.
+
 ## Issue 15 scenario review
 
 Two saved automated scenarios cover unknown registration with a claimed small-scale exception and a takeaway exemption claim. Inputs, normalized outputs, passage IDs, model identity, review dates, and reviewer notes are in [`issue-15-scenario-review.json`](issue-15-scenario-review.json).
