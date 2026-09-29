@@ -79,37 +79,33 @@ function validClaim(claim, evidence, supportedTags) {
   };
 }
 
+const routeTags = new Set(['household-business-authority', 'conditional-route']);
+const taskTags = new Set([
+  'separate-raw-cooked-utensils',
+  'safe-cooking-utensils',
+  'clean-dry-serving-utensils',
+  'conditions-for-exception',
+]);
+const unresolvedTags = new Set([
+  'household-business-authority',
+  'conditional-route',
+  'unverified-administrative-details',
+  'certificate-rule',
+  'exception-criteria',
+  'no-size-only-exemption',
+  'procedure-code',
+]);
+const nextActionTags = new Set([...unresolvedTags, 'official-next-step']);
+
 export function sanitizeChecklist(input, evidence) {
-  const route = validClaim(input?.route, evidence, new Set(['household-business-authority', 'conditional-route']));
-  const nextAction = validClaim(input?.nextAction, evidence, new Set([
-    'household-business-authority',
-    'conditional-route',
-    'official-next-step',
-    'procedure-code',
-    'unverified-administrative-details',
-    'certificate-rule',
-    'exception-criteria',
-    'no-size-only-exemption',
-  ]));
+  const route = validClaim(input?.route, evidence, routeTags);
+  const nextAction = validClaim(input?.nextAction, evidence, nextActionTags);
   const tasks = (Array.isArray(input?.tasks) ? input.tasks : [])
-    .map((claim) => validClaim(claim, evidence, new Set([
-      'separate-raw-cooked-utensils',
-      'safe-cooking-utensils',
-      'clean-dry-serving-utensils',
-      'conditions-for-exception',
-    ])))
+    .map((claim) => validClaim(claim, evidence, taskTags))
     .filter(Boolean)
     .slice(0, 4);
   const unresolved = (Array.isArray(input?.unresolved) ? input.unresolved : [])
-    .map((claim) => validClaim(claim, evidence, new Set([
-      'household-business-authority',
-      'conditional-route',
-      'unverified-administrative-details',
-      'certificate-rule',
-      'exception-criteria',
-      'no-size-only-exemption',
-      'procedure-code',
-    ])))
+    .map((claim) => validClaim(claim, evidence, unresolvedTags))
     .filter(Boolean)
     .slice(0, 5);
 
@@ -260,41 +256,43 @@ export function addSupportedFallbacks(checklist, facts, evidence) {
         ['safe-cooking-utensils', 'Rà soát dụng cụ pha chế để bảo đảm vệ sinh an toàn.'],
         ['clean-dry-serving-utensils', 'Rà soát dụng cụ phục vụ: vật liệu an toàn, được rửa sạch và giữ khô.'],
       ];
-    completed.tasks = taskOptions.flatMap(([tag, text]) => {
-      const passage = findByTag(tag);
-      return passage
-        ? [fixedClaim(text, [passage.id], evidence, [tag])]
-        : [];
-    }).filter(Boolean).slice(0, 4);
+    completed.tasks = taskOptions
+      .map(([tag, text]) => {
+        const passage = findByTag(tag);
+        return passage ? fixedClaim(text, [passage.id], evidence, [tag]) : null;
+      })
+      .filter(Boolean)
+      .slice(0, 4);
   }
 
-  const procedure = findByTag('unverified-administrative-details');
-  if (procedure && !completed.unresolved.some((claim) => claim.passageIds.includes(procedure.id))) {
+  const administrativeDetails = findByTag('unverified-administrative-details');
+  if (administrativeDetails
+    && !completed.unresolved.some((claim) => claim.passageIds.includes(administrativeDetails.id))) {
     const unresolved = fixedClaim(
       'Thành phần hồ sơ, lệ phí và thời hạn hiện hành: chưa xác minh. Danh mục năm 2025 chỉ giúp nhận diện mã thủ tục, không xác nhận các chi tiết này đang áp dụng.',
-      [procedure.id], evidence, ['unverified-administrative-details'],
+      [administrativeDetails.id], evidence, ['unverified-administrative-details'],
     );
     if (unresolved) completed.unresolved = [...completed.unresolved, unresolved].slice(0, 5);
   }
 
   if (!completed.nextAction) {
     const authority = findByTag('household-business-authority');
-    const procedure = findByTag('procedure-code');
+    const procedureCode = findByTag('procedure-code');
     let text;
     let passageIds = [];
 
     if (facts.legalForm === 'unknown' && authority) {
       text = 'Đối chiếu đúng tên giấy đăng ký theo Câu trả lời 24680 trên Cổng Thông tin điện tử Đà Nẵng; sau đó hỏi cơ quan tương ứng để xác nhận thủ tục đang áp dụng.';
       passageIds = [authority.id];
-    } else if (facts.legalForm === 'household_business' && authority && procedure) {
+    } else if (facts.legalForm === 'household_business' && authority && procedureCode) {
       text = 'Hỏi UBND cấp xã nơi quán hoạt động xem mã thủ tục 1.013855.H17 còn áp dụng không; xin đường dẫn hiện hành xác nhận riêng hồ sơ, lệ phí và thời hạn.';
-      passageIds = [authority.id, procedure.id];
+      passageIds = [authority.id, procedureCode.id];
     } else if (facts.legalForm === 'household_business' && authority) {
       text = 'Hỏi UBND cấp xã nơi quán hoạt động về thủ tục đang áp dụng và đề nghị cung cấp đường dẫn chính thức.';
       passageIds = [authority.id];
-    } else if (procedure) {
+    } else if (procedureCode) {
       text = 'Hỏi đầu mối an toàn thực phẩm chính thức của Đà Nẵng xem mã 1.013855.H17 còn áp dụng không và xin đường dẫn thủ tục hiện hành.';
-      passageIds = [procedure.id];
+      passageIds = [procedureCode.id];
     }
 
     if (text) {
