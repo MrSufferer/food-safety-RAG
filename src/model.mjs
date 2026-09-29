@@ -7,6 +7,8 @@ Chỉ dùng các dữ kiện chủ quán cung cấp và các đoạn nguồn tro
 
 Mọi câu nói về thẩm quyền, điều kiện, hoặc việc chuẩn bị dựa trên nguồn đều phải kèm passageIds chính xác từ các đoạn nguồn gửi vào. Chọn đoạn có thẻ nội dung đúng với từng loại nhận định; không dùng đoạn về dụng cụ để dẫn cho thẩm quyền. Nếu nguồn không hỗ trợ, bỏ câu đó. Tạo 1–4 việc rà soát/chuẩn bị hữu ích, không tuyên bố chủ quán đã tuân thủ. Tạo route có điều kiện dựa trên giấy đăng ký hộ kinh doanh được người dùng xác nhận. Trong unresolved, ghi rõ thành phần hồ sơ, lệ phí và thời hạn hiện hành là “chưa xác minh”. Bước tiếp theo phải là việc hỏi/xác nhận chính thức, không khẳng định được nộp hồ sơ. Nhắc rõ các dấu tick chỉ ghi nhận đã đọc hoặc đã chuẩn bị, không xác nhận tuân thủ hay sẵn sàng nộp.`;
 
+const CITATION_GUIDANCE = `Ánh xạ nguồn cho tình huống hộ kinh doanh quán cà phê: route dùng dn-faq-24680-household-certificate-authority; tasks chỉ dùng các passage về dụng cụ trong Luật 55; unresolved về hồ sơ, lệ phí và thời hạn chỉ dùng dn-procedure-1-013855-h17, không kèm FAQ vì FAQ chỉ nói về thẩm quyền; nextAction có thể dùng FAQ và danh mục thủ tục. Không tự ghép nguồn không hỗ trợ vào cùng một claim.`;
+
 export class ProviderError extends Error {
   constructor(message, evidence) {
     super(message);
@@ -17,7 +19,7 @@ export class ProviderError extends Error {
 
 export async function generateChecklist({ facts, evidence, env = process.env, fetchImpl = fetch }) {
   const apiKey = env.OPENROUTER_API_KEY?.trim();
-  const model = env.OPENROUTER_MODEL?.trim() || 'google/gemma-4-31b-it:free';
+  const model = env.OPENROUTER_MODEL?.trim() || 'nvidia/nemotron-3-super-120b-a12b:free';
   if (!apiKey) throw new ProviderError('Thiếu OPENROUTER_API_KEY. Hãy cấu hình khóa trong môi trường chạy để tạo checklist.', evidence);
 
   let response;
@@ -28,13 +30,13 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'http://localhost:4173',
-        'X-Title': 'Checklist chuẩn bị quán Đà Nẵng',
+        'X-Title': 'Da Nang Cafe Food Safety Checklist',
       },
       body: JSON.stringify({
         model,
         temperature: 0.1,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: `${SYSTEM_PROMPT}\n\n${CITATION_GUIDANCE}` },
           { role: 'user', content: JSON.stringify({ facts, passages: evidence }) },
         ],
         response_format: { type: 'json_object' },

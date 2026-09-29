@@ -8,7 +8,7 @@ A small Vietnamese preparation checklist demo for a café or takeaway registered
 2. Run `npm start` with Node.js 22.9 or newer.
 3. Open the local URL printed by the server.
 
-The default model is `google/gemma-4-31b-it:free`. Set `OPENROUTER_MODEL` in `.env` to choose another OpenRouter model. The key stays in the server environment; it is not sent to the browser. No package installation is required.
+The default model is `nvidia/nemotron-3-super-120b-a12b:free`. Set `OPENROUTER_MODEL` in `.env` to choose another OpenRouter model. The key stays in the server environment; it is not sent to the browser. No package installation is required.
 
 ## Scope and source behavior
 

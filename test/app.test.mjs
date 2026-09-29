@@ -81,7 +81,42 @@ test('user facts pass through review, evidence selection, model generation, and 
     assert.deepEqual(requestBody.messages[1].content && JSON.parse(requestBody.messages[1].content).facts, householdCafe);
     assert.equal(requestBody.response_format.type, 'json_object');
     assert.ok(JSON.parse(requestBody.messages[1].content).passages.length <= 6);
+    assert.match(requestBody.messages[0].content, /unresolved về hồ sơ, lệ phí và thời hạn chỉ dùng dn-procedure-1-013855-h17/);
   });
+});
+
+test('sends an ASCII provider title header accepted by Fetch', async () => {
+  let title;
+  const fetchImpl = async (_url, options) => {
+    title = new Headers(options.headers).get('x-title');
+    return fakeProviderResponse(validOutput());
+  };
+
+  await withServer({ env: { OPENROUTER_API_KEY: 'test-key' }, fetchImpl }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    assert.equal(response.status, 200);
+  });
+  assert.equal(title, 'Da Nang Cafe Food Safety Checklist');
+});
+
+test('uses the documented free model when no model is configured', async () => {
+  let requestedModel;
+  const fetchImpl = async (_url, options) => {
+    requestedModel = JSON.parse(options.body).model;
+    return fakeProviderResponse(validOutput());
+  };
+
+  await withServer({ env: { OPENROUTER_API_KEY: 'test-key' }, fetchImpl }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    assert.equal(response.status, 200);
+  });
+  assert.equal(requestedModel, 'nvidia/nemotron-3-super-120b-a12b:free');
 });
 
 test('does not call the provider before facts have been reviewed', async () => {

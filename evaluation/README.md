@@ -18,6 +18,22 @@ Copy the run details from the result and expanded source panel before the observ
 - Unresolved point the participant names:
 - Official next action shown:
 
+### Automated model run
+
+This verifies the configured model and citation path only. It is not the required uncoached owner observation.
+
+- Run date: 2026-09-29
+- Model ID: `nvidia/nemotron-3-super-120b-a12b:free`
+- Snapshot review date: 2026-09-29
+- Owner facts: café; household-business registration; prepares food and drinks; Đà Nẵng
+- Selected passage IDs: `dn-faq-24680-household-certificate-authority`, `dn-procedure-1-013855-h17`, `vn-decree-15-2018-articles-11-12`, `vn-law-55-2010-article-29-separate-utensils`, `vn-law-55-2010-article-29-safe-utensils`
+- Conditional route: ask UBND cấp xã about the food-safety certificate route for the confirmed household-business registration
+- Preparation tasks returned: separate utensils and containers for raw and cooked food; use hygienic cooking tools; use safe, washed, dry eating utensils
+- Unresolved points: current dossier, fee, and processing time
+- Official next action: confirm the current dossier, fee, and processing time with UBND cấp xã
+- Outcome: HTTP 200; claims passed citation validation
+- Human observation: pending
+
 ## Session record
 
 - Date and evaluator:
