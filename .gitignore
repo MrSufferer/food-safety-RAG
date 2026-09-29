@@ -6,3 +6,4 @@ node_modules/
 .brand-preview/
 output/
 .playwright-cli/
+.vercel/
