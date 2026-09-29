@@ -170,7 +170,7 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
     const preferredModel = env.GEMINI_MODEL?.trim() || GEMINI_DEFAULT_MODEL;
     const freeModel = env.GEMINI_FREE_MODEL?.trim() || GEMINI_FREE_FALLBACK_MODEL;
     const geminiModels = [...new Set([preferredModel, freeModel])];
-    let geminiModelsRateLimited = true;
+    let allGeminiAttemptsRateLimited = true;
 
     for (const [index, model] of geminiModels.entries()) {
       try {
@@ -178,13 +178,12 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
         const notice = index > 0 ? GEMINI_FALLBACK_NOTICE : undefined;
         return parseChecklist(result.content, facts, evidence, result.model, notice);
       } catch (error) {
-        if (error?.status !== 429) geminiModelsRateLimited = false;
-        continue;
+        if (error?.status !== 429) allGeminiAttemptsRateLimited = false;
       }
     }
 
     if (!openRouterApiKey) {
-      if (geminiModelsRateLimited) return buildRateLimitFallback(facts, evidence);
+      if (allGeminiAttemptsRateLimited) return buildRateLimitFallback(facts, evidence);
       throw new ProviderError('Gemini chưa tạo được checklist. Hãy cấu hình OPENROUTER_API_KEY để bật mô hình dự phòng; các đoạn nguồn đã chọn được giữ bên dưới.', evidence);
     }
   }

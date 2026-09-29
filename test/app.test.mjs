@@ -229,6 +229,26 @@ test('returns a cited local checklist when both Gemini models are rate-limited',
   ]);
 });
 
+test('keeps a provider error when a Gemini attempt fails for another reason', async () => {
+  const statuses = [429, 503];
+  await withServer({
+    env: { GEMINI_API_KEY: 'gemini-test-key' },
+    fetchImpl: async () => ({ ok: false, status: statuses.shift() }),
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 502);
+    assert.match(body.error, /OPENROUTER_API_KEY/);
+    assert.equal(body.checklist, undefined);
+    assert.ok(body.evidence.length > 0);
+  });
+  assert.equal(statuses.length, 0);
+});
+
 test('tries the free Gemini model and then OpenRouter when the preferred Gemini model fails', async () => {
   const requested = [];
   await withServer({
