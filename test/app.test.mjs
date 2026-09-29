@@ -206,12 +206,38 @@ test('uses the documented free model when no model is configured', async () => {
   assert.equal(requestedModel, 'nvidia/nemotron-3-super-120b-a12b:free');
 });
 
-test('returns a cited local checklist when the provider rate limits generation', async () => {
-  let providerRequests = 0;
+test('configures a free OpenRouter model as fallback and identifies it when used', async () => {
+  let requestBody;
+  await withServer({
+    env: { OPENROUTER_API_KEY: 'test-key', OPENROUTER_MODEL: 'primary-model' },
+    fetchImpl: async (_url, options) => {
+      requestBody = JSON.parse(options.body);
+      return fakeProviderResponse(validOutput(), { model: 'google/gemma-4-31b-it:free' });
+    },
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(requestBody.model, 'primary-model');
+    assert.deepEqual(requestBody.models, ['google/gemma-4-31b-it:free']);
+    assert.equal(body.model, 'google/gemma-4-31b-it:free');
+    assert.match(body.generationNotice, /mô hình dự phòng miễn phí/i);
+  });
+});
+
+test('returns a cited local checklist when the primary and free fallback are rate-limited', async () => {
+  let requestBody;
   const facts = { ...householdCafe, smallExemptionClaim: 'yes' };
   await withServer({
     env: { OPENROUTER_API_KEY: 'test-key' },
-    fetchImpl: async () => { providerRequests += 1; return { ok: false, status: 429 }; },
+    fetchImpl: async (_url, options) => {
+      requestBody = JSON.parse(options.body);
+      return { ok: false, status: 429 };
+    },
   }, async (origin) => {
     const response = await fetch(`${origin}/api/checklist`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -230,7 +256,7 @@ test('returns a cited local checklist when the provider rate limits generation',
     assert.ok(body.checklist.exceptionAssessment.citations.some((citation) => citation.id === 'vn-decree-15-2018-articles-11-12'));
     assert.equal(body.error, undefined);
   });
-  assert.equal(providerRequests, 1);
+  assert.deepEqual(requestBody.models, ['google/gemma-4-31b-it:free']);
 });
 
 test('does not call the provider before facts have been reviewed', async () => {

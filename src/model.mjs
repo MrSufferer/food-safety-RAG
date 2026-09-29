@@ -4,6 +4,8 @@ import { buildBoundaryChecklist } from './questions.mjs';
 
 const RATE_LIMIT_FALLBACK_MODEL = 'local:rate-limit-fallback-v1';
 const RATE_LIMIT_FALLBACK_NOTICE = 'Dịch vụ tạo checklist đang giới hạn yêu cầu. Checklist này được tạo tự động từ các đoạn nguồn đã chọn; hãy xem trích dẫn và xác nhận điểm chưa rõ với cơ quan có thẩm quyền.';
+const FREE_MODEL_FALLBACK = 'google/gemma-4-31b-it:free';
+const FREE_MODEL_FALLBACK_NOTICE = 'Mô hình chính không khả dụng; checklist được tạo bằng mô hình dự phòng miễn phí.';
 
 const SYSTEM_PROMPT = `Bạn là công cụ chuẩn bị thông tin cho chủ quán cà phê/takeaway mới ở Đà Nẵng. Trả lời hoàn toàn bằng tiếng Việt, ngắn và cụ thể. Chỉ trả một đối tượng JSON có đúng các khóa route, tasks, unresolved, nextAction. Mỗi mục là null hoặc đối tượng có text và passageIds; riêng tasks và unresolved là mảng. Đây không phải tư vấn pháp lý, quyết định đủ điều kiện, hồ sơ nộp, hay xác nhận sẵn sàng hoạt động.
 
@@ -27,6 +29,7 @@ export class ProviderError extends Error {
 export async function generateChecklist({ facts, evidence, env = process.env, fetchImpl = fetch }) {
   const apiKey = env.OPENROUTER_API_KEY?.trim();
   const model = env.OPENROUTER_MODEL?.trim() || 'nvidia/nemotron-3-super-120b-a12b:free';
+  const fallbackModel = FREE_MODEL_FALLBACK;
   if (!apiKey) throw new ProviderError('Thiếu OPENROUTER_API_KEY. Hãy cấu hình khóa trong môi trường chạy để tạo checklist.', evidence);
 
   let response;
@@ -41,6 +44,7 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
       },
       body: JSON.stringify({
         model,
+        ...(fallbackModel !== model ? { models: [fallbackModel] } : {}),
         temperature: 0.1,
         messages: [
           { role: 'system', content: `${SYSTEM_PROMPT}\n\n${CITATION_GUIDANCE}` },
@@ -98,5 +102,12 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
     throw new ProviderError('Câu trả lời không có mục nào đủ căn cứ để hiển thị. Hãy kiểm tra các đoạn nguồn và xác nhận trực tiếp với cơ quan có thẩm quyền.', evidence, evidenceGaps);
   }
 
-  return { checklist, evidenceGaps, model: payload.model || model, snapshotDate };
+  const servedModel = payload.model || model;
+  return {
+    checklist,
+    evidenceGaps,
+    model: servedModel,
+    ...(fallbackModel !== model && servedModel === fallbackModel ? { generationNotice: FREE_MODEL_FALLBACK_NOTICE } : {}),
+    snapshotDate,
+  };
 }
