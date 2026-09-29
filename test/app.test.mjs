@@ -3,8 +3,30 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createServer } from '../server.mjs';
 import { passages } from '../src/passages.mjs';
+import { renderProviderFailure } from '../public/evidence-view.js';
 
 const issue16Review = JSON.parse(await readFile(new URL('../evaluation/issue-16-scenario-review.json', import.meta.url), 'utf8'));
+
+class TestElement {
+  constructor(tagName) {
+    this.tagName = tagName;
+    this.children = [];
+    this.attributes = {};
+    this.textContent = '';
+  }
+
+  append(...children) {
+    this.children.push(...children);
+  }
+
+  setAttribute(name, value) {
+    this.attributes[name] = value;
+  }
+}
+
+function testDocument() {
+  return { createElement: (tagName) => new TestElement(tagName) };
+}
 
 const householdCafe = {
   businessType: 'cafe',
@@ -209,6 +231,37 @@ test('provider failure displays selected source passages and no generated checkl
     assert.equal(body.checklist, undefined);
     assert.ok(body.evidence.some((passage) => passage.id === 'vn-law-55-2010-article-29-separate-utensils'));
   });
+});
+
+test('provider failure renders the error and selected evidence expanded by default', () => {
+  const parent = new TestElement('main');
+  const evidence = [{
+    document: 'Luật An toàn thực phẩm',
+    section: 'Điều 29',
+    excerpt: 'Dụng cụ riêng cho thực phẩm sống và chín.',
+    id: 'vn-law-55-2010-article-29-separate-utensils',
+    claimTags: ['separate-raw-cooked-utensils'],
+    version: '55/2010/QH12',
+    issuedDate: '2010-06-17',
+    effectiveDate: '2011-07-01',
+    reviewDate: '2026-09-29',
+    useLimits: 'Không xác nhận hồ sơ hiện hành.',
+    url: 'https://example.gov.vn/law',
+  }];
+
+  renderProviderFailure({ error: 'Dịch vụ tạo câu trả lời đang lỗi.', evidence }, {
+    document: testDocument(),
+    parent,
+  });
+
+  const [error, evidenceDisclosure] = parent.children;
+  assert.equal(error.className, 'error-box');
+  assert.equal(error.attributes.role, 'alert');
+  assert.equal(error.children[1].textContent, 'Dịch vụ tạo câu trả lời đang lỗi.');
+  assert.equal(evidenceDisclosure.open, true);
+  const [passage] = evidenceDisclosure.children.slice(1);
+  assert.equal(passage.open, true);
+  assert.equal(passage.children[1].children[0].textContent, evidence[0].excerpt);
 });
 
 test('withholds a claim if its generated citation is topically unrelated to the claim', async () => {
