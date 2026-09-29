@@ -78,7 +78,7 @@ async function requestGemini({ facts, evidence, apiKey, model, fetchImpl }) {
         contents: [{ role: 'user', parts: [{ text: JSON.stringify({ facts, passages: evidence }) }] }],
         generationConfig: {
           temperature: 0.1,
-          responseFormat: { text: { mimeType: 'application/json' } },
+          responseMimeType: 'application/json',
         },
       }),
     });

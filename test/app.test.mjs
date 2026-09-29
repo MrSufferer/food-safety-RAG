@@ -154,7 +154,8 @@ test('uses Gemini Flash-Lite with structured Vietnamese checklist output when co
     assert.equal(response.status, 200);
     assert.equal(body.model, 'gemini-test');
     assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
-    assert.deepEqual(requestBody.generationConfig.responseFormat, { text: { mimeType: 'application/json' } });
+    assert.equal(requestBody.generationConfig.responseMimeType, 'application/json');
+    assert.equal(Object.hasOwn(requestBody.generationConfig, 'responseFormat'), false);
     assert.match(requestBody.systemInstruction.parts[0].text, /người lần đầu mở quán/i);
     assert.match(requestBody.systemInstruction.parts[0].text, /không viết nhận xét.*nguyên mẫu/i);
     const input = JSON.parse(requestBody.contents[0].parts[0].text);
