@@ -1,3 +1,53 @@
+function normalizeClaimText(text) {
+  return text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLocaleLowerCase('vi');
+}
+
+function claimMatchesTag(text, tag) {
+  const has = (pattern) => pattern.test(text);
+  const hasTool = has(/dung cu|do chua|vat lieu/);
+  const action = has(/ra soat|kiem tra|ghi lai|hoi|lien he|xac nhan|doi chieu|mo cau tra loi|gui cau hoi|xin/);
+  const sizeAndExemption = has(/quy mo|quan nho|co so nho/) && has(/mien|ngoai le/);
+  const rejectsSizeOnlyExemption = has(/khong du|khong the ket luan|khong phai can cu|khong du can cu|chua the ket luan/);
+
+  if (sizeAndExemption && !rejectsSizeOnlyExemption) return false;
+
+  switch (tag) {
+    case 'separate-raw-cooked-utensils':
+      return hasTool && ((has(/song/) && has(/chin/)) || (has(/rieng|tach/) && has(/thuc pham/))
+        || (has(/dieu 29/) && has(/dieu kien/)));
+    case 'safe-cooking-utensils':
+      return hasTool && has(/nau|che bien|pha che/) && has(/an toan|ve sinh/);
+    case 'clean-dry-serving-utensils':
+      return has(/dung cu|vat lieu/) && has(/an uong|phuc vu|chen|dia|ly|coc/) && has(/an toan|rua|sach|kho/);
+    case 'conditions-for-exception':
+      return has(/dieu kien|yeu cau/) && has(/an toan thuc pham/);
+    case 'household-business-authority':
+    case 'conditional-route':
+      return has(/ho kinh doanh|giay dang ky|giay chung nhan dau tu|lien hop tac xa|hop tac xa/)
+        && has(/ubnd cap xa|so y te|co quan tiep nhan|phan nhom co quan|cau tra loi 24680/)
+        && has(/giay chung nhan|tham quyen|thu tuc|co quan/);
+    case 'official-next-step':
+      return action;
+    case 'procedure-code':
+      return (has(/1\.013855\.h17|ma thu tuc|danh muc thu tuc/) && (action || has(/chua xac minh|hien hanh|con ap dung/)));
+    case 'unverified-administrative-details':
+      return has(/chua xac minh/) && has(/ho so|le phi|thoi han|ma thu tuc/);
+    case 'certificate-rule':
+      return has(/giay chung nhan/) && has(/cap|ngoai le|mien|phai|thuoc dien/);
+    case 'exception-criteria':
+      return has(/dieu 3|dieu 12|nhom ngoai le|kinh doanh thuc pham nho le|thuc pham bao goi san|thuc an duong pho/);
+    case 'no-size-only-exemption':
+      return has(/quy mo|quan nho|nho/) && has(/khong du|khong the ket luan|khong phai can cu|khong du can cu/);
+    default:
+      return false;
+  }
+}
+
 function validClaim(claim, evidence, supportedTags) {
   if (!claim || typeof claim !== 'object' || Array.isArray(claim)) return null;
   const text = typeof claim.text === 'string' ? claim.text.trim() : '';
@@ -6,7 +56,10 @@ function validClaim(claim, evidence, supportedTags) {
 
   if (!text || text.length > 900 || passageIds.length === 0 || passageIds.length > 4) return null;
   if (passageIds.some((id) => typeof id !== 'string' || !byId.has(id))) return null;
-  if (passageIds.some((id) => !byId.get(id).claimTags?.some((tag) => supportedTags.has(tag)))) return null;
+  const normalizedText = normalizeClaimText(text);
+  if (passageIds.some((id) => !byId.get(id).claimTags?.some((tag) => (
+    supportedTags.has(tag) && claimMatchesTag(normalizedText, tag)
+  )))) return null;
 
   return {
     text,
@@ -105,6 +158,26 @@ function fixedClaim(text, passageIds, evidence, tags) {
   return validClaim({ text, passageIds }, evidence, new Set(tags));
 }
 
+export function addSupportedPreparationTasks(checklist, facts, evidence) {
+  if (checklist.tasks.length > 0) return checklist;
+  const taskOptions = facts.preparation === 'food_and_drink'
+    ? [
+      ['separate-raw-cooked-utensils', 'Rà soát việc dùng dụng cụ và đồ chứa riêng cho thực phẩm sống và thực phẩm chín.'],
+      ['safe-cooking-utensils', 'Rà soát dụng cụ nấu nướng, chế biến để bảo đảm vệ sinh an toàn.'],
+      ['clean-dry-serving-utensils', 'Rà soát dụng cụ ăn uống: vật liệu an toàn, được rửa sạch và giữ khô.'],
+    ]
+    : [
+      ['safe-cooking-utensils', 'Rà soát dụng cụ pha chế để bảo đảm vệ sinh an toàn.'],
+      ['clean-dry-serving-utensils', 'Rà soát dụng cụ phục vụ: vật liệu an toàn, được rửa sạch và giữ khô.'],
+    ];
+  const tasks = taskOptions.flatMap(([tag, text]) => {
+    const passage = evidence.find((item) => item.claimTags?.includes(tag));
+    const claim = passage && fixedClaim(text, [passage.id], evidence, [tag]);
+    return claim ? [claim] : [];
+  });
+  return { ...checklist, tasks };
+}
+
 const faqId = 'dn-faq-24680-household-certificate-authority';
 const decreeId = 'vn-decree-15-2018-articles-11-12';
 
@@ -182,13 +255,8 @@ export function applyOwnerFactGuidance(checklist, facts, evidence) {
 }
 
 export function assertUsefulChecklist(checklist) {
-  const hasSupportedClaim = checklist.route
-    || checklist.tasks.length > 0
-    || checklist.unresolved.length > 0
-    || checklist.nextAction
-    || checklist.exceptionAssessment;
-  if (!hasSupportedClaim) {
-    throw new Error('Không có nhận định nào đủ căn cứ để hiển thị.');
+  if (checklist.tasks.length === 0) {
+    throw new Error('Không có việc chuẩn bị nào được hỗ trợ bởi nguồn đã chọn.');
   }
   return checklist;
 }

@@ -1,4 +1,4 @@
-import { applyOwnerFactGuidance, assertUsefulChecklist, sanitizeChecklist } from './checklist.mjs';
+import { addSupportedPreparationTasks, applyOwnerFactGuidance, assertUsefulChecklist, sanitizeChecklist } from './checklist.mjs';
 import { snapshotDate } from './passages.mjs';
 import { buildBoundaryChecklist } from './questions.mjs';
 
@@ -89,7 +89,9 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
 
   const sanitized = sanitizeChecklist(parsed, evidence, { expectRoute: facts.legalForm !== 'unknown' });
   const { evidenceGaps: initialEvidenceGaps, ...safeChecklist } = sanitized;
-  const checklist = applyOwnerFactGuidance(safeChecklist, facts, evidence);
+  const checklist = addSupportedPreparationTasks(
+    applyOwnerFactGuidance(safeChecklist, facts, evidence), facts, evidence,
+  );
   const evidenceGaps = initialEvidenceGaps.filter((gap) => {
     if (gap.section === 'route' && checklist.route) return false;
     if (gap.section === 'tasks' && gap.issue === 'missing' && checklist.tasks.length > 0) return false;
@@ -99,7 +101,7 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
   try {
     assertUsefulChecklist(checklist);
   } catch {
-    throw new ProviderError('Câu trả lời không có mục nào đủ căn cứ để hiển thị. Hãy kiểm tra các đoạn nguồn và xác nhận trực tiếp với cơ quan có thẩm quyền.', evidence, evidenceGaps);
+    throw new ProviderError('Câu trả lời không có việc chuẩn bị nào được hỗ trợ bởi các đoạn nguồn đã chọn. Hãy kiểm tra nguồn và xác nhận trực tiếp với cơ quan có thẩm quyền.', evidence, evidenceGaps);
   }
 
   const servedModel = payload.model || model;

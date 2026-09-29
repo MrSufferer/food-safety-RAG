@@ -72,6 +72,10 @@ test('withholds claims that have missing, invalid, or topically unrelated passag
         text: 'Tách riêng dụng cụ cho thực phẩm sống và thực phẩm chín.',
         passageIds: ['vn-law-55-2010-article-29-separate-utensils'],
       },
+      {
+        text: 'Quán nhỏ được miễn giấy chứng nhận.',
+        passageIds: ['vn-law-55-2010-article-29-safe-utensils'],
+      },
       { text: 'Quán nhỏ được miễn giấy chứng nhận.', passageIds: [] },
       { text: 'Nộp mẫu A trong 5 ngày.', passageIds: ['made-up-id'] },
       { text: 'UBND cấp xã là đầu mối cho hộ kinh doanh.', passageIds: ['dn-faq-24680-household-certificate-authority'] },
@@ -79,6 +83,9 @@ test('withholds claims that have missing, invalid, or topically unrelated passag
     unresolved: [{
       text: 'Chưa xác minh bộ hồ sơ, lệ phí và thời hạn hiện hành.',
       passageIds: ['dn-procedure-1-013855-h17'],
+    }, {
+      text: 'Quán nhỏ chắc chắn được miễn giấy chứng nhận.',
+      passageIds: ['vn-decree-15-2018-articles-11-12'],
     }],
     nextAction: {
       text: 'Hỏi UBND cấp xã về thủ tục đang áp dụng trước khi nộp.',
@@ -96,7 +103,10 @@ test('withholds claims that have missing, invalid, or topically unrelated passag
 test('citations resolve only against selected, dated official passages', () => {
   const evidence = selectEvidence(householdCafe, passages);
   const safe = sanitizeChecklist({
-    route: { text: 'Hướng liên hệ cần xác nhận.', passageIds: ['dn-faq-24680-household-certificate-authority'] },
+    route: {
+      text: 'Nguồn Đà Nẵng nêu UBND cấp xã có thẩm quyền cho cơ sở có đăng ký hộ kinh doanh; cần xác nhận thủ tục áp dụng.',
+      passageIds: ['dn-faq-24680-household-certificate-authority'],
+    },
     tasks: [], unresolved: [], nextAction: null,
   }, evidence);
   const [citation] = safe.route.citations;

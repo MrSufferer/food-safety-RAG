@@ -377,6 +377,51 @@ test('keeps supported checklist items and explains sections omitted for weak evi
   });
 });
 
+test('uses cited preparation tasks when every model task is unsupported', async () => {
+  const output = validOutput();
+  output.tasks = [{
+    text: 'Quán nhỏ chắc chắn được miễn giấy chứng nhận.',
+    passageIds: ['vn-law-55-2010-article-29-safe-utensils'],
+  }];
+  await withServer({
+    env: { OPENROUTER_API_KEY: 'test-key' },
+    fetchImpl: async () => fakeProviderResponse(output),
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.ok(body.evidenceGaps.some((gap) => gap.section === 'tasks'));
+    assert.ok(body.checklist.tasks.length > 0);
+    assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
+    assert.ok(body.checklist.tasks.every((task) => !/miễn giấy chứng nhận/.test(task.text)));
+  });
+});
+
+test('shows sources instead of a checklist when no preparation passage supports a task', async () => {
+  const preparationTags = new Set([
+    'separate-raw-cooked-utensils', 'safe-cooking-utensils', 'clean-dry-serving-utensils',
+  ]);
+  const corpus = passages.filter((passage) => !passage.claimTags?.some((tag) => preparationTags.has(tag)));
+  await withServer({
+    env: { OPENROUTER_API_KEY: 'test-key' },
+    corpus,
+    fetchImpl: async () => fakeProviderResponse(validOutput()),
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+    assert.equal(response.status, 502);
+    assert.equal(body.checklist, undefined);
+    assert.ok(body.evidence.length > 0);
+    assert.match(body.error, /không có việc chuẩn bị nào được hỗ trợ/);
+  });
+});
+
 test('renders evidence gaps with section labels and plain-language explanations', () => {
   const parent = new TestElement('main');
   renderEvidenceGaps([{
