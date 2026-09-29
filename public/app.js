@@ -218,6 +218,22 @@ function addClaim(parent, claim, className = '') {
   parent.append(article);
 }
 
+function renderEvidenceGaps(gaps = []) {
+  if (!Array.isArray(gaps) || gaps.length === 0) return null;
+  const section = node('section', 'evidence-gaps');
+  section.append(node('h3', '', 'Một số mục chưa đủ căn cứ'));
+  const list = node('ul', 'evidence-gap-list');
+  for (const gap of gaps) {
+    const item = node('li', 'evidence-gap');
+    item.append(node('strong', '', gap.label));
+    item.append(node('p', '', gap.reason));
+    item.append(node('p', 'evidence-gap-needed', `Cần thêm: ${gap.neededEvidence}`));
+    list.append(item);
+  }
+  section.append(list);
+  return section;
+}
+
 function renderEvidence(evidence = [], parent = resultContent) {
   if (!Array.isArray(evidence) || evidence.length === 0) return;
   const details = node('details', 'source-box');
@@ -279,6 +295,9 @@ function showResponse(data, factsFromRequest) {
   document.querySelector('#snapshot-badge').textContent = `Nguồn rà soát ${reviewedOn}${modelLabel}`;
 
   if (data.questionAnswer) resultContent.append(renderQuestionAnswer(data.questionAnswer, data.question));
+
+  const evidenceGaps = renderEvidenceGaps(data.evidenceGaps);
+  if (evidenceGaps) resultContent.append(evidenceGaps);
 
   if (data.error) {
     const error = node('div', 'error-box');

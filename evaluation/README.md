@@ -1,8 +1,8 @@
-# Newcomer observation
+# Owner observation
 
-Status: **pending a real, uncoached observation**.
+Status: **waived for this build by maintainer direction on 2026-09-29**. No participant-usefulness claim is made.
 
-Use this record when a first-time Vietnamese-speaking café or takeaway owner in Đà Nẵng tries the demo. Do not coach the participant through the flow. Record what they do and say in their own words.
+This worksheet is retained for an optional later review. If used, do not coach the participant through the flow; record what they do and say in their own words.
 
 ## Registered household-café run
 
@@ -32,13 +32,19 @@ This verifies the configured model and citation path only. It is not the require
 - Unresolved points: current dossier, fee, and processing time
 - Official next action: confirm the current dossier, fee, and processing time with UBND cấp xã
 - Outcome: HTTP 200; claims passed citation validation
-- Human observation: pending
+- Newcomer observation: waived; no participant-usefulness claim is made
 
 ## Issue 15 scenario review
 
 Two saved automated scenarios cover unknown registration with a claimed small-scale exception and a takeaway exemption claim. Inputs, normalized outputs, passage IDs, model identity, review dates, and reviewer notes are in [`issue-15-scenario-review.json`](issue-15-scenario-review.json).
 
 These records use the local `test-model` provider fixture and the app's citation validation and deterministic fact guidance; they are not live model runs. Both scenarios passed the automated citation and content assertions in `test/app.test.mjs`. The live provider key is not configured in this workspace, so a live model replay remains pending. The recorded reviewer notes check that each legal and procedure claim is cited and qualified by the official passage limits.
+
+## Weak-evidence and provider-failure checks
+
+The integration checks in `test/app.test.mjs` cover a response whose route citation is absent or unrelated while cited preparation tasks remain available. The response withholds the route, adds an `evidenceGaps` entry naming the source still needed, and keeps only supported tasks. If all model tasks are unsupported, source-mapped preparation tasks may fill the section; if the selected corpus supports no preparation task, the app returns an error with retrieved passages and no checklist. A provider failure follows the same page flow and shows retrieved passages without any generated checklist.
+
+These checks use a local fake provider and synthetic corpus filtering. They verify application behavior, not a live model run or legal review. A live model replay is unavailable in this workspace because `OPENROUTER_API_KEY` is not configured.
 
 ## Session record
 
@@ -54,4 +60,4 @@ These records use the local `test-model` provider fixture and the app's citation
 - Participant's usefulness rating and reason:
 - Changes required before owner trial:
 
-Do not mark this evaluation complete based on automated tests or an agent walkthrough. The issue's newcomer check needs an actual first-time owner.
+Automated tests and model runs are not participant evidence. This build does not claim participant usefulness; the uncoached observation was waived.

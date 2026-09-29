@@ -80,6 +80,7 @@ test('user facts pass through review, evidence selection, model generation, and 
     assert.deepEqual(body.facts, householdCafe);
     assert.equal(body.model, 'test-model');
     assert.equal(body.snapshotDate, '2026-09-29');
+    assert.deepEqual(body.evidenceGaps, []);
     assert.equal(body.checklist.tasks.length, 1);
     assert.ok(body.checklist.route.citations[0].url.startsWith('https://'));
     assert.equal(body.checklist.unresolved[0].citations[0].snapshotDate, body.snapshotDate);
@@ -211,9 +212,62 @@ test('provider failure displays selected source passages and no generated checkl
   });
 });
 
-test('withholds a claim if its generated citation is topically unrelated to the claim', async () => {
+test('does not invent a preparation task when the retrieved corpus has no supporting passage', async () => {
+  const taskTags = new Set([
+    'separate-raw-cooked-utensils',
+    'safe-cooking-utensils',
+    'clean-dry-serving-utensils',
+  ]);
+  const corpus = passages.filter((passage) => !passage.claimTags?.some((tag) => taskTags.has(tag)));
+  await withServer({
+    env: { OPENROUTER_API_KEY: 'test-key' },
+    corpus,
+    fetchImpl: async () => fakeProviderResponse(validOutput()),
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 502);
+    assert.equal(body.checklist, undefined);
+    assert.ok(body.evidence.length > 0);
+    assert.match(body.error, /không có việc chuẩn bị nào được hỗ trợ/);
+  });
+});
+
+test('keeps preparation visible with source-mapped tasks when every model task is unsupported', async () => {
+  const output = validOutput();
+  output.tasks = [{
+    text: 'Quán nhỏ chắc chắn được miễn giấy chứng nhận.',
+    passageIds: ['vn-law-55-2010-article-29-safe-utensils'],
+  }];
+  await withServer({
+    env: { OPENROUTER_API_KEY: 'test-key' },
+    fetchImpl: async () => fakeProviderResponse(output),
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(body.evidenceGaps.some((gap) => gap.section === 'tasks'));
+    assert.ok(body.checklist.tasks.length > 0);
+    assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
+    assert.ok(body.checklist.tasks.every((task) => !/miễn giấy chứng nhận/.test(task.text)));
+  });
+});
+
+test('withholds a claim with a topically unrelated citation and returns the supported partial checklist', async () => {
   const invalidOutput = validOutput();
   invalidOutput.route.passageIds = ['vn-law-55-2010-article-29-safe-utensils'];
+  invalidOutput.tasks.push({
+    text: 'Nộp ngay mẫu đơn chưa được nguồn xác nhận.',
+    passageIds: ['dn-procedure-1-013855-h17'],
+  });
   await withServer({
     env: { OPENROUTER_API_KEY: 'test-key' },
     fetchImpl: async () => fakeProviderResponse(invalidOutput),
@@ -223,10 +277,41 @@ test('withholds a claim if its generated citation is topically unrelated to the 
       body: JSON.stringify({ facts: householdCafe, reviewed: true }),
     });
     const body = await response.json();
-    assert.equal(response.status, 502);
-    assert.match(body.error, /thiếu căn cứ/);
-    assert.equal(body.checklist, undefined);
+    assert.equal(response.status, 200);
+    assert.equal(body.checklist.route, null);
+    assert.ok(body.checklist.tasks.length > 0);
+    assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
+    assert.ok(body.evidenceGaps.some((gap) => gap.section === 'route'));
+    assert.ok(body.evidenceGaps.some((gap) => gap.section === 'tasks'));
+    assert.ok(body.checklist.tasks.every((task) => !/Nộp ngay mẫu đơn/.test(task.text)));
     assert.ok(body.evidence.length > 0);
+  });
+});
+
+test('keeps cited preparation tasks and explains a missing route source', async () => {
+  const corpus = passages.filter((passage) => passage.id !== 'dn-faq-24680-household-certificate-authority');
+  await withServer({
+    env: { OPENROUTER_API_KEY: 'test-key' },
+    corpus,
+    fetchImpl: async () => fakeProviderResponse(validOutput()),
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts: householdCafe, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.checklist.route, null);
+    assert.ok(body.checklist.tasks.length > 0);
+    assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
+    const routeGap = body.evidenceGaps.find((gap) => gap.section === 'route');
+    assert.ok(routeGap, 'missing route evidence gap');
+    assert.match(routeGap.reason, /chưa đủ căn cứ/i);
+    assert.match(routeGap.neededEvidence, /Đà Nẵng/);
+    assert.ok(body.evidenceGaps.some((gap) => gap.section === 'nextAction'));
+    assert.ok(body.checklist.nextAction);
+    assert.ok(body.checklist.nextAction.citations.every((citation) => citation.id !== 'dn-faq-24680-household-certificate-authority'));
   });
 });
 
@@ -360,5 +445,10 @@ test('serves the one-command demo page', async () => {
     assert.match(html, /Hỏi từng bước/);
     assert.match(html, /Bạn nghĩ quán có thể được miễn/);
     assert.match(html, /id="question"/);
+
+    const appResponse = await fetch(`${origin}/app.js`);
+    const app = await appResponse.text();
+    assert.match(app, /renderEvidenceGaps/);
+    assert.match(app, /Một số mục chưa đủ căn cứ/);
   });
 });

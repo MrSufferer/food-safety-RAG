@@ -179,6 +179,12 @@ h1 { max-width: 720px; margin-bottom: 15px; font-size: clamp(37px, 5.4vw, 60px);
 .prep-item { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 11px; padding: 13px 14px; border: 1px solid var(--line); background: var(--surface); }
 .prep-item input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--ok); }
 .prep-item p { margin: 0; font-size: 13px; }
+.evidence-gaps { margin: 18px 0; padding: 15px 17px; border-left: 3px solid var(--notice-line); background: var(--notice); color: var(--notice-ink); }
+.evidence-gaps h3 { margin: 0 0 9px; font-size: 13px; }
+.evidence-gap-list { display: grid; gap: 10px; margin: 0; padding-left: 18px; }
+.evidence-gap { padding-left: 2px; font-size: 12px; }
+.evidence-gap p { margin: 4px 0 0; }
+.evidence-gap-needed { font-size: 11px; }
 .unresolved { margin-top: 18px; padding: 15px 17px; border-left: 3px solid var(--notice-line); background: var(--notice); color: var(--notice-ink); }
 .unresolved h3 { margin: 0 0 5px; font-size: 13px; }
 .unresolved p { margin: 0; font-size: 12px; }

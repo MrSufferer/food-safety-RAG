@@ -1,4 +1,10 @@
-import { applyOwnerFactGuidance, assertUsefulChecklist, sanitizeChecklist } from './checklist.mjs';
+import {
+  addSupportedFallbacks,
+  applyOwnerFactGuidance,
+  assertUsefulChecklist,
+  buildEvidenceGaps,
+  sanitizeChecklist,
+} from './checklist.mjs';
 import { snapshotDate } from './passages.mjs';
 
 const SYSTEM_PROMPT = `Bạn là công cụ chuẩn bị thông tin cho chủ quán cà phê/takeaway mới ở Đà Nẵng. Trả lời hoàn toàn bằng tiếng Việt, ngắn và cụ thể. Chỉ trả một đối tượng JSON có đúng các khóa route, tasks, unresolved, nextAction. Mỗi mục là null hoặc đối tượng có text và passageIds; riêng tasks và unresolved là mảng. Đây không phải tư vấn pháp lý, quyết định đủ điều kiện, hồ sơ nộp, hay xác nhận sẵn sàng hoạt động.
@@ -67,12 +73,22 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
     throw new ProviderError('Dịch vụ trả về nội dung không theo cấu trúc yêu cầu. Không tạo checklist chưa kiểm chứng.', evidence);
   }
 
-  const checklist = applyOwnerFactGuidance(sanitizeChecklist(parsed, evidence), facts, evidence);
+  const sanitized = sanitizeChecklist(parsed, evidence);
+  const evidenceGaps = buildEvidenceGaps(parsed, sanitized, facts);
+  const checklist = addSupportedFallbacks(
+    applyOwnerFactGuidance(sanitized, facts, evidence),
+    facts,
+    evidence,
+  );
   try {
-    assertUsefulChecklist(checklist, { requireRoute: facts.legalForm !== 'unknown' });
+    assertUsefulChecklist(checklist, {
+      requireRoute: false,
+      requireUnresolved: false,
+      requireNextAction: false,
+    });
   } catch {
-    throw new ProviderError('Câu trả lời thiếu căn cứ hoặc thiếu bước hành động. Không hiển thị các nhận định đó.', evidence);
+    throw new ProviderError('Câu trả lời không có việc chuẩn bị nào được hỗ trợ bởi các đoạn nguồn đã chọn. Không tạo checklist chưa kiểm chứng.', evidence);
   }
 
-  return { checklist, model: payload.model || model, snapshotDate };
+  return { checklist, evidenceGaps, model: payload.model || model, snapshotDate };
 }
