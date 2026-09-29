@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createServer } from '../server.mjs';
 import { passages } from '../src/passages.mjs';
-import { renderEvidence, renderEvidenceGaps, renderProviderFailure } from '../public/evidence-view.js';
+import { renderEvidence, renderEvidenceGaps, renderGenerationNotice, renderProviderFailure } from '../public/evidence-view.js';
 
 const issue16Review = JSON.parse(await readFile(new URL('../evaluation/issue-16-scenario-review.json', import.meta.url), 'utf8'));
 
@@ -206,6 +206,33 @@ test('uses the documented free model when no model is configured', async () => {
   assert.equal(requestedModel, 'nvidia/nemotron-3-super-120b-a12b:free');
 });
 
+test('returns a cited local checklist when the provider rate limits generation', async () => {
+  let providerRequests = 0;
+  const facts = { ...householdCafe, smallExemptionClaim: 'yes' };
+  await withServer({
+    env: { OPENROUTER_API_KEY: 'test-key' },
+    fetchImpl: async () => { providerRequests += 1; return { ok: false, status: 429 }; },
+  }, async (origin) => {
+    const response = await fetch(`${origin}/api/checklist`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts, reviewed: true }),
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(body.facts, facts);
+    assert.equal(body.model, 'local:rate-limit-fallback-v1');
+    assert.match(body.generationNotice, /giới hạn|quá tải/i);
+    assert.equal(body.checklist.tasks.length, 4);
+    assert.ok(body.checklist.tasks.every((task) => task.citations.length > 0));
+    assert.ok(body.checklist.route.citations.some((citation) => citation.id === 'dn-faq-24680-household-certificate-authority'));
+    assert.ok(body.checklist.unresolved.some((claim) => /chưa xác minh/i.test(claim.text)));
+    assert.ok(body.checklist.exceptionAssessment.citations.some((citation) => citation.id === 'vn-decree-15-2018-articles-11-12'));
+    assert.equal(body.error, undefined);
+  });
+  assert.equal(providerRequests, 1);
+});
+
 test('does not call the provider before facts have been reviewed', async () => {
   let providerCalled = false;
   await withServer({ env: { OPENROUTER_API_KEY: 'test-key' }, fetchImpl: async () => { providerCalled = true; } }, async (origin) => {
@@ -313,6 +340,16 @@ test('renders evidence gaps with section labels and plain-language explanations'
   const [item] = section.children[1].children;
   assert.equal(item.children[0].textContent, 'Hướng cơ quan: ');
   assert.match(item.children[1].textContent, /không xác nhận cơ quan/);
+});
+
+test('renders a status notice when the local checklist handles a provider rate limit', () => {
+  const parent = new TestElement('main');
+  renderGenerationNotice('Checklist được tạo từ các nguồn đã chọn.', { document: testDocument(), parent });
+
+  assert.equal(parent.children.length, 1);
+  assert.equal(parent.children[0].className, 'help-text generation-notice');
+  assert.equal(parent.children[0].attributes.role, 'status');
+  assert.equal(parent.children[0].textContent, 'Checklist được tạo từ các nguồn đã chọn.');
 });
 
 test('keeps unsupported registration routes out of the model request', async () => {

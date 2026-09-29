@@ -16,9 +16,10 @@ The default model is `nvidia/nemotron-3-super-120b-a12b:free`. Set `OPENROUTER_M
 - A small-business claim is checked against the reported registration and actual food activity. Shop size alone does not establish a certificate exception, and food-safety conditions still apply to exempt establishments.
 - Only the owner's answers and matching source passages are sent to OpenRouter. The bundled source snapshot is dated 2026-09-29.
 - Generated claims must reference IDs from the selected passages. Claims without valid citations are removed; an incomplete route or next step withholds the checklist and shows the sources instead.
+- If OpenRouter returns HTTP 429, the app builds a local checklist from the selected passages and labels it as a fallback. It does not retry the rate-limited model.
 - A tick means the owner has read or prepared an item. It does not certify compliance or readiness to file.
 - The exact current dossier, fee, and deadline remain unverified. The app asks the owner to confirm those with the commune-level authority.
 
 ## Local checks
 
-Run `npm run typecheck` to syntax-check the JavaScript files with Node, then `npm test` to exercise scenario filtering, reviewed-facts flow, source selection, citation validation, provider failure handling, and the local page route. The uncoached newcomer observation was waived as an acceptance criterion; the recorded model run is automated, not participant evidence. See [`evaluation/README.md`](evaluation/README.md).
+Run `npm run typecheck` to syntax-check the JavaScript files with Node, then `npm test` to exercise scenario filtering, reviewed-facts flow, source selection, citation validation, provider failure and rate-limit fallback handling, and the local page route. The uncoached newcomer observation was waived as an acceptance criterion; the recorded model run is automated, not participant evidence. See [`evaluation/README.md`](evaluation/README.md).

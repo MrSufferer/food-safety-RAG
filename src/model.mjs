@@ -1,5 +1,9 @@
 import { applyOwnerFactGuidance, assertUsefulChecklist, sanitizeChecklist } from './checklist.mjs';
 import { snapshotDate } from './passages.mjs';
+import { buildBoundaryChecklist } from './questions.mjs';
+
+const rateLimitFallbackModel = 'local:rate-limit-fallback-v1';
+const rateLimitFallbackNotice = 'Dịch vụ tạo checklist đang giới hạn yêu cầu. Checklist này được tạo tự động từ các đoạn nguồn đã chọn; hãy xem trích dẫn và xác nhận điểm chưa rõ với cơ quan có thẩm quyền.';
 
 const SYSTEM_PROMPT = `Bạn là công cụ chuẩn bị thông tin cho chủ quán cà phê/takeaway mới ở Đà Nẵng. Trả lời hoàn toàn bằng tiếng Việt, ngắn và cụ thể. Chỉ trả một đối tượng JSON có đúng các khóa route, tasks, unresolved, nextAction. Mỗi mục là null hoặc đối tượng có text và passageIds; riêng tasks và unresolved là mảng. Đây không phải tư vấn pháp lý, quyết định đủ điều kiện, hồ sơ nộp, hay xác nhận sẵn sàng hoạt động.
 
@@ -50,6 +54,17 @@ export async function generateChecklist({ facts, evidence, env = process.env, fe
   }
 
   if (!response.ok) {
+    if (response.status === 429) {
+      const local = buildBoundaryChecklist(evidence, facts);
+      const checklist = assertUsefulChecklist(applyOwnerFactGuidance(local.checklist, facts, evidence));
+      return {
+        checklist,
+        evidenceGaps: local.evidenceGaps,
+        model: rateLimitFallbackModel,
+        generationNotice: rateLimitFallbackNotice,
+        snapshotDate,
+      };
+    }
     throw new ProviderError(`Dịch vụ tạo câu trả lời trả về lỗi (${response.status}). Các đoạn nguồn đã chọn được giữ bên dưới.`, evidence);
   }
 

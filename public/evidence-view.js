@@ -75,6 +75,13 @@ export function renderEvidenceGaps(evidenceGaps = [], { document, parent }) {
   parent.append(section);
 }
 
+export function renderGenerationNotice(message, { document, parent }) {
+  if (!message) return;
+  const notice = node(document, 'p', 'help-text generation-notice', message);
+  notice.setAttribute('role', 'status');
+  parent.append(notice);
+}
+
 export function renderProviderFailure(data, { document, parent }) {
   const error = node(document, 'div', 'error-box');
   error.setAttribute('role', 'alert');

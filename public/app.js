@@ -1,4 +1,4 @@
-import { renderEvidence, renderEvidenceGaps, renderProviderFailure } from './evidence-view.js';
+import { renderEvidence, renderEvidenceGaps, renderGenerationNotice, renderProviderFailure } from './evidence-view.js';
 
 const labels = {
   legalForm: {
@@ -227,10 +227,13 @@ function showResponse(data, factsFromRequest) {
   const facts = data.facts || factsFromRequest;
   if (facts) resultContent.append(renderFacts(facts));
   const reviewedOn = data.snapshotDate || '2026-09-29';
-  const modelLabel = data.model && data.model !== 'local:question-boundary-v1' ? ` · ${data.model}` : '';
+  const modelLabel = data.model === 'local:rate-limit-fallback-v1'
+    ? ' · checklist dựng từ nguồn'
+    : data.model && data.model !== 'local:question-boundary-v1' ? ` · ${data.model}` : '';
   document.querySelector('#snapshot-badge').textContent = `Nguồn rà soát ${reviewedOn}${modelLabel}`;
 
   if (data.questionAnswer) resultContent.append(renderQuestionAnswer(data.questionAnswer, data.question));
+  renderGenerationNotice(data.generationNotice, { document, parent: resultContent });
 
   if (data.error) {
     renderProviderFailure(data, { document, parent: resultContent });
