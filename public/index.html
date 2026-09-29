@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#faf8f3">
+    <title>Chuẩn bị an toàn thực phẩm · Quán ở Đà Nẵng</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/styles.css">
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Trang đầu checklist chuẩn bị quán">
+        <span class="brand-mark" aria-hidden="true">Q</span>
+        <span><strong>Rà soát cho quán</strong><small>Đà Nẵng · an toàn thực phẩm</small></span>
+      </a>
+      <span class="header-note">BẢN CHUẨN BỊ · 29.09.2026</span>
+    </header>
+
+    <main class="page-shell">
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">Dành cho quán cà phê và takeaway</p>
+        <h1 id="page-title">Biết quán mình cần rà soát điều gì trước.</h1>
+        <p class="intro-copy">Trả lời vài câu về giấy đăng ký và cách quán chuẩn bị đồ ăn, thức uống. Bạn sẽ nhận được các bước chuẩn bị kèm đoạn nguồn chính thức để tự đối chiếu.</p>
+      </section>
+
+      <section class="workspace" aria-labelledby="form-title">
+        <div class="form-column">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Hỏi từng bước</p>
+              <h2 id="form-title">Thông tin về quán</h2>
+            </div>
+            <span class="scope-note">Đà Nẵng</span>
+          </div>
+
+          <ol class="stepper" aria-label="Tiến trình nhập thông tin">
+            <li class="stepper-item is-current" data-step-indicator="0"><span>1</span><span>Đăng ký</span></li>
+            <li class="stepper-item" data-step-indicator="1"><span>2</span><span>Hoạt động</span></li>
+            <li class="stepper-item" data-step-indicator="2"><span>3</span><span>Rà soát</span></li>
+          </ol>
+
+          <form id="intake-form" novalidate>
+            <section class="step-panel" data-step-panel="0" aria-labelledby="step-one-title">
+              <p class="step-count">BƯỚC 1 / 3</p>
+              <h3 id="step-one-title">Giấy đăng ký của quán là loại nào?</h3>
+              <p class="help-text">Chọn đúng tên trên giấy bạn đang có. Bản thử này chỉ đưa hướng dẫn cho hộ kinh doanh.</p>
+              <fieldset class="choice-list">
+                <legend class="sr-only">Loại giấy đăng ký</legend>
+                <label class="choice"><input type="radio" name="legalForm" value="household_business"><span><strong>Giấy chứng nhận đăng ký hộ kinh doanh</strong><small>Ví dụ: giấy đăng ký hộ kinh doanh của quán</small></span></label>
+                <label class="choice"><input type="radio" name="legalForm" value="enterprise"><span><strong>Giấy chứng nhận đăng ký doanh nghiệp</strong><small>Công ty hoặc doanh nghiệp</small></span></label>
+                <label class="choice"><input type="radio" name="legalForm" value="cooperative"><span><strong>Giấy đăng ký hợp tác xã</strong><small>Hoặc liên hiệp hợp tác xã</small></span></label>
+                <label class="choice"><input type="radio" name="legalForm" value="unknown"><span><strong>Tôi chưa rõ loại giấy</strong><small>Có thể xem lại giấy đăng ký trước khi tiếp tục</small></span></label>
+              </fieldset>
+              <div class="step-actions"><span></span><button class="button button-primary" type="button" data-next>Tiếp tục <span aria-hidden="true">→</span></button></div>
+            </section>
+
+            <section class="step-panel" data-step-panel="1" aria-labelledby="step-two-title" hidden>
+              <p class="step-count">BƯỚC 2 / 3</p>
+              <h3 id="step-two-title">Quán bán theo hình thức nào?</h3>
+              <fieldset class="choice-list compact">
+                <legend class="sr-only">Hình thức quán</legend>
+                <label class="choice"><input type="radio" name="businessType" value="cafe"><span><strong>Quán cà phê</strong><small>Có chỗ phục vụ tại quán</small></span></label>
+                <label class="choice"><input type="radio" name="businessType" value="takeaway"><span><strong>Quán takeaway</strong><small>Khách chủ yếu mua mang đi</small></span></label>
+                <label class="choice"><input type="radio" name="businessType" value="both"><span><strong>Cả hai</strong><small>Phục vụ tại quán và mang đi</small></span></label>
+              </fieldset>
+              <h3 class="question-secondary">Quán chuẩn bị đồ ăn, thức uống ra sao?</h3>
+              <fieldset class="choice-list compact">
+                <legend class="sr-only">Cách chuẩn bị món</legend>
+                <label class="choice"><input type="radio" name="preparation" value="food_and_drink"><span><strong>Có chuẩn bị đồ ăn và thức uống</strong><small>Ví dụ: pha chế và làm món tại quán</small></span></label>
+                <label class="choice"><input type="radio" name="preparation" value="drinks_only"><span><strong>Chỉ pha chế thức uống</strong><small>Không chế biến món ăn tại quán</small></span></label>
+              </fieldset>
+              <div class="step-actions"><button class="button button-quiet" type="button" data-back>← Quay lại</button><button class="button button-primary" type="button" data-next>Tiếp tục <span aria-hidden="true">→</span></button></div>
+            </section>
+
+            <section class="step-panel" data-step-panel="2" aria-labelledby="step-three-title" hidden>
+              <p class="step-count">BƯỚC 3 / 3</p>
+              <h3 id="step-three-title">Kiểm tra lại thông tin bạn nhập</h3>
+              <p class="help-text">Đây là thông tin do bạn cung cấp, chưa phải nhận định từ nguồn pháp luật.</p>
+              <dl id="review-facts" class="owner-facts"></dl>
+              <label class="review-check"><input id="review-confirm" type="checkbox"><span>Tôi đã xem lại và xác nhận thông tin trên đúng với quán.</span></label>
+              <div class="step-actions"><button class="button button-quiet" type="button" data-back>← Quay lại sửa</button><button class="button button-primary" id="submit-button" type="submit">Tạo checklist có nguồn <span aria-hidden="true">→</span></button></div>
+            </section>
+            <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <aside class="aside-column" aria-label="Phạm vi sử dụng">
+          <div class="aside-note">
+            <p class="eyebrow">Phạm vi bản thử</p>
+            <h2>Một tình huống, có căn cứ.</h2>
+            <p>Hướng dẫn này tập trung vào quán cà phê hoặc takeaway ở Đà Nẵng có giấy đăng ký hộ kinh doanh.</p>
+            <p class="aside-divider">Nếu bạn chưa rõ loại giấy, hãy chọn “Tôi chưa rõ”. Công cụ sẽ không tự đoán cơ quan tiếp nhận.</p>
+          </div>
+          <div class="aside-note aside-note-soft">
+            <p class="eyebrow">Lưu ý</p>
+            <p>Checklist giúp bạn rà soát và chuẩn bị. Dấu tick không xác nhận quán đã tuân thủ, đủ điều kiện hay sẵn sàng nộp hồ sơ.</p>
+          </div>
+        </aside>
+      </section>
+
+      <section id="result" class="result" aria-live="polite" aria-labelledby="result-title" hidden>
+        <div class="result-header">
+          <div><p class="eyebrow">Checklist chuẩn bị</p><h2 id="result-title">Kết quả cho tình huống của quán</h2></div>
+          <span class="snapshot-badge" id="snapshot-badge"></span>
+        </div>
+        <div id="result-content"></div>
+      </section>
+
+      <footer class="site-footer">
+        <span>Ảnh chụp nguồn được rà soát ngày 29/09/2026.</span>
+        <span>Không dùng checklist này thay cho xác nhận của cơ quan có thẩm quyền.</span>
+      </footer>
+    </main>
+  </body>
+</html>
