@@ -179,7 +179,15 @@ function renderEvidence(evidence = [], parent = resultContent) {
 function renderFacts(facts) {
   const box = node('section', 'result-facts');
   box.append(node('h3', '', 'Thông tin bạn đã cung cấp'));
-  box.append(node('p', '', `${labels.legalForm[facts.legalForm]} · ${labels.businessType[facts.businessType]} · ${labels.preparation[facts.preparation]} · ${labels.operationMode[facts.operationMode]} · ${labels.smallExemptionClaim[facts.smallExemptionClaim]} · Đà Nẵng`));
+  const summary = [
+    labels.legalForm[facts.legalForm],
+    labels.businessType[facts.businessType],
+    labels.preparation[facts.preparation],
+    labels.operationMode[facts.operationMode],
+    labels.smallExemptionClaim[facts.smallExemptionClaim],
+    'Đà Nẵng',
+  ].join(' · ');
+  box.append(node('p', '', summary));
   return box;
 }
 
